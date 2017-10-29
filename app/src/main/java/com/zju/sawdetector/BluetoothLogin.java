@@ -1,5 +1,6 @@
 package com.zju.sawdetector;
 
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
@@ -15,9 +16,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public class BluetoothLogin extends Activity {
 
@@ -25,6 +28,7 @@ public class BluetoothLogin extends Activity {
     private BroadcastReceiver mReceiver;
     private ArrayAdapter<String> mDeviceNames;
     private List<BluetoothDevice> mDevices = new ArrayList<>();
+    private boolean mIsPairedList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,12 +43,31 @@ public class BluetoothLogin extends Activity {
         deviceListView.setOnItemClickListener(new ListView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                BluetoothDevice device = mDevices.get(position);
-                if (device.createBond()) {
-                    Toast.makeText(getApplicationContext(), "Bluetooth device is paired.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Failed to pair the bluetooth device.", Toast.LENGTH_SHORT).show();
+                if (mDevices.isEmpty() || position >= mDevices.size()) {
+                    return;
                 }
+
+                BluetoothDevice device = mDevices.get(position);
+                if (!mIsPairedList) {
+                    if (device.createBond()) {
+                        Toast.makeText(getApplicationContext(), "Bluetooth device is paired.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Failed to pair the bluetooth device.", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    if (SystemConfig.getFrequencyDetector() == null) {
+                        SystemConfig.setFrequencyDetector(device);
+                        Toast.makeText(getApplicationContext(), "FrequencyDetector is selected", Toast.LENGTH_SHORT).show();
+                    }
+
+                    else {
+                        SystemConfig.setTemperatureController(device);
+                        Toast.makeText(getApplicationContext(), "TemperatureController is selected", Toast.LENGTH_SHORT).show();
+
+                    }
+                }
+
+
             }
         });
     }
@@ -64,11 +87,14 @@ public class BluetoothLogin extends Activity {
 
     public void showPaired (View view){
         mDeviceNames.clear();
+        mDevices.clear();
+        mIsPairedList = true;
         Set<BluetoothDevice> pairedDevices = mAdapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
                 String newDevice= "设备名称:  "+device.getName()+"    Mac地址:  "+device.getAddress();
                 mDeviceNames.add(newDevice);
+                mDevices.add(device);
             }
         }
     }
@@ -76,6 +102,7 @@ public class BluetoothLogin extends Activity {
     public void startDiscovery(View view) {
         mDeviceNames.clear();
         mDevices.clear();
+        mIsPairedList = false;
         mAdapter.startDiscovery();
 
         if (mReceiver == null) {
@@ -111,6 +138,10 @@ public class BluetoothLogin extends Activity {
     }
 
     public void enterSystem(View view) {
+        if (SystemConfig.getFrequencyDetector() == null || SystemConfig.getTemperatureController() == null)
+        {
+            return;
+        }
         Intent intent = new Intent(BluetoothLogin.this,MainSystem.class);
         startActivity(intent);
 
