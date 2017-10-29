@@ -10,18 +10,21 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class BluetoothLogin extends Activity {
 
     private BluetoothAdapter mAdapter;
     private BroadcastReceiver mReceiver;
-    private ArrayAdapter<String> mDeviceList;
-    boolean scanTag = true;
+    private ArrayAdapter<String> mDeviceNames;
+    private List<BluetoothDevice> mDevices = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,9 +33,20 @@ public class BluetoothLogin extends Activity {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         setContentView(R.layout.bluetooth_login);
         ListView deviceListView = findViewById(R.id.listView1);
-        mDeviceList = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
-        deviceListView.setAdapter(mDeviceList);
+        mDeviceNames = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
+        deviceListView.setAdapter(mDeviceNames);
 
+        deviceListView.setOnItemClickListener(new ListView.OnItemClickListener(){
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                BluetoothDevice device = mDevices.get(position);
+                if (device.createBond()) {
+                    Toast.makeText(getApplicationContext(), "Bluetooth device is paired.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Failed to pair the bluetooth device.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     public void turnOn(View view){
@@ -49,26 +63,20 @@ public class BluetoothLogin extends Activity {
 
 
     public void showPaired (View view){
-        mDeviceList.clear();
+        mDeviceNames.clear();
         Set<BluetoothDevice> pairedDevices = mAdapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
-            mDeviceList.add("已配对设备：");
             for (BluetoothDevice device : pairedDevices) {
                 String newDevice= "设备名称:  "+device.getName()+"    Mac地址:  "+device.getAddress();
-                mDeviceList.add(newDevice);
+                mDeviceNames.add(newDevice);
             }
         }
     }
 
-
-
     public void startDiscovery(View view) {
+        mDeviceNames.clear();
+        mDevices.clear();
         mAdapter.startDiscovery();
-        if (scanTag)
-        {
-            mDeviceList.add("周围扫描到的设备：");
-            scanTag = false;
-        }
 
         if (mReceiver == null) {
             IntentFilter filter = new IntentFilter();
@@ -79,11 +87,12 @@ public class BluetoothLogin extends Activity {
             mReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    String action = intent.getAction();
-                    if (action.equals(BluetoothDevice.ACTION_FOUND)) {
-                        BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                        mDeviceList.add("设备名称:  "+device.getName()+"    Mac地址:  "+device.getAddress());
-                    }
+                String action = intent.getAction();
+                if (action.equals(BluetoothDevice.ACTION_FOUND)) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    mDeviceNames.add("设备名称:  "+device.getName()+"    Mac地址:  "+device.getAddress());
+                    mDevices.add(device);
+                }
                 }
             };
 
@@ -94,15 +103,14 @@ public class BluetoothLogin extends Activity {
     }
 
     public void cancelDiscovery(View view) {
-
         mAdapter.cancelDiscovery();
+        unregisterReceiver(mReceiver);
+        mReceiver = null;
         Toast.makeText(getApplicationContext(),"Discovery has been canceled",
             Toast.LENGTH_LONG).show();
-
     }
 
     public void enterSystem(View view) {
-
         Intent intent = new Intent(BluetoothLogin.this,MainSystem.class);
         startActivity(intent);
 
