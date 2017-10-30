@@ -1,18 +1,21 @@
 package com.zju.sawdetector;
-
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Window;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+
 
 public class MainSystem extends AppCompatActivity {
 
@@ -23,98 +26,124 @@ public class MainSystem extends AppCompatActivity {
     boolean readFinishTag  = false;
     int tempHigh, tempLow;
     double sawTemp;
+    private TextView sawTempShow;
+
+    public static final int updateSawTemp = 1;
+    @SuppressLint("HandlerLeak")
+    private Handler handler = new Handler () {
+        @SuppressLint("DefaultLocale")
+        public void handleMessage(Message msg){
+
+            switch (msg.what){
+                case updateSawTemp:
+                     sawTempShow.setText(String.format("%.2f", sawTemp));
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.activity_main_system);
+        sawTempShow = (TextView) findViewById(R.id.textViewSawTemp);
+        threadfreq.start();//读取FrequencyDetector蓝牙数据
 
-        Thread threadfreq = new Thread(){
-            @Override
-            public void run() {
-                BluetoothDevice freq = SystemConfig.getFrequencyDetector();
-                BluetoothDevice temp = SystemConfig.getTemperatureController();
-
-                UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-                BluetoothSocket socket;
-                try {
-                    socket = freq.createRfcommSocketToServiceRecord(uuid);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return;
-                }
-
-                try {
-                    socket.connect();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return;
-                }
-
-                try {
-                    mFreqInput = socket.getInputStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                if (mFreqInput == null) {
-                    return;
-                }
-
-                byte[] buffer = new byte[1];
-                int length;
-                for (;;) {
-                    try {
-                        length = mFreqInput.read(buffer);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return;
-                    }
-                    if (length <= 0) {
-                        return;
-                    }
-                    String tempStr;
-                    tempStr = bytesToHexString(buffer);
-                    int tempInt = strToInt(tempStr);
-
-                    if (tempInt == 539 && readTempTag == 0)
-                    {
-                        readTempTag = 2;
-                        readFinishTag = false;
-                    }
-                    else
-                    {
-                        switch (readTempTag){
-                            case 2:
-                                tempHigh = tempInt;
-                                break;
-                            case 1:
-                                tempLow = tempInt;
-                                readFinishTag = true;
-                                break;
-                            default:
-                                break;
-                        }
-                        readTempTag --;
-                        if (readTempTag < 0)
-                            readTempTag = 0;
-                    }
-
-                    if (readFinishTag)
-                    {
-                        sawTemp = tempHigh * 3.3024 + tempLow * 0.0129 - 251.43;
-                    }
-
-
-
-
-
-
-                }
-            }
-        };
-        threadfreq.start();
     }
+
+    Thread threadfreq = new Thread() {
+        @Override
+        public void run() {
+            BluetoothDevice freq = SystemConfig.getFrequencyDetector ();
+            //BluetoothDevice temp = SystemConfig.getTemperatureController();
+
+            UUID uuid = UUID.fromString ( "00001101-0000-1000-8000-00805F9B34FB" );
+            BluetoothSocket socket;
+            try {
+                socket = freq.createRfcommSocketToServiceRecord ( uuid );
+            } catch (IOException e) {
+                e.printStackTrace ();
+                return;
+            }
+
+            try {
+                socket.connect ();
+            } catch (IOException e) {
+                e.printStackTrace ();
+                return;
+            }
+
+            try {
+                mFreqInput = socket.getInputStream ();
+            } catch (IOException e) {
+                e.printStackTrace ();
+            }
+
+            if (mFreqInput == null) {
+                return;
+            }
+
+            byte[] buffer = new byte[1];
+            int length;
+            for (; ; ) {
+                try {
+                    length = mFreqInput.read ( buffer );
+                } catch (IOException e) {
+                    e.printStackTrace ();
+                    return;
+                }
+                if (length <= 0) {
+                    return;
+                }
+                String tempStr;
+                tempStr = bytesToHexString ( buffer );
+                int tempInt = strToInt ( tempStr );
+
+                if (tempInt == 539 && readTempTag == 0) {
+                    readTempTag = 2;
+                    readFinishTag = false;
+                } else {
+                    switch (readTempTag) {
+                        case 2:
+                            tempHigh = tempInt;
+                            break;
+                        case 1:
+                            tempLow = tempInt;
+                            readFinishTag = true;
+                            break;
+                        default:
+                            break;
+                    }
+                    readTempTag--;
+                    if (readTempTag < 0)
+                        readTempTag = 0;
+                }
+
+                if (readFinishTag) {
+                    sawTemp = tempHigh * 3.3024 + tempLow * 0.0129 - 251.43;
+
+                    Message message = new Message ();
+                    message.what = updateSawTemp;
+                    handler.sendMessage ( message );
+
+
+                }
+
+
+
+            }
+
+
+        }
+
+    };
+
+
 
 
     public static String bytesToHexString( byte[] b) {
@@ -152,5 +181,6 @@ public class MainSystem extends AppCompatActivity {
             num = -num;
         return num;
     }
+
 
 }
