@@ -86,9 +86,9 @@
 
     <ListView
         android:id="@+id/listView1"
-        android:layout_margin="40dp"
         android:layout_width="match_parent"
         android:layout_height="300dp"
+        android:layout_margin="40dp"
         android:background="@android:color/darker_gray" />
 
     <Button
