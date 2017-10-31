@@ -40,4 +40,10 @@
         android:textSize="30sp"
         android:onClick="startFrequency" />
 
+    <SurfaceView
+
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"/>
+
 </LinearLayout>

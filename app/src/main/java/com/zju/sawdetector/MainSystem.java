@@ -1,13 +1,12 @@
 package com.zju.sawdetector;
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
-import android.content.Intent;
-import android.net.wifi.WifiEnterpriseConfig;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,10 +14,12 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
 import java.util.UUID;
 
 
@@ -45,6 +46,8 @@ public class MainSystem extends AppCompatActivity {
     long sensor,ref;
     double sawFreq;
     private TextView sawFreqShow;
+    private long freqBeginTime;
+    private double freqTime;
 
     Button mStartFrequency;
 
@@ -62,7 +65,7 @@ public class MainSystem extends AppCompatActivity {
                      sawTempShow.setText(String.format("%.2f", sawTemp));
                     break;
                 case updateSawFreq:
-                     sawFreqShow.setText (String.format("%.2f", sawFreq));
+                     sawFreqShow.setText ("频率： " + String.format("%.2f", sawFreq)+ "  时间： " + String.valueOf ( freqTime ));
                     break;
                 default:
                     break;
@@ -77,6 +80,9 @@ public class MainSystem extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main_system);
+
+
+
         sawTempShow = (TextView) findViewById(R.id.textViewSawTemp);
         sawFreqShow = (TextView) findViewById (R.id.textViewSawFreq);
         mStartFrequency = (Button ) findViewById ( R.id.button_startFrequency );
@@ -87,6 +93,7 @@ public class MainSystem extends AppCompatActivity {
     }
 
     Thread threadfreq = new Thread() {
+        @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void run() {
             BluetoothDevice freq = SystemConfig.getFrequencyDetector ();
@@ -207,6 +214,7 @@ public class MainSystem extends AppCompatActivity {
                     Message message = new Message ();
                     message.what = updateSawTemp;
                     handler.sendMessage ( message );
+                    readTempFinishTag = false;
                 }
 
                 if(readFreqFinishTag){
@@ -218,11 +226,13 @@ public class MainSystem extends AppCompatActivity {
                         sawFreq = 0;
                     }
 
-
+                    freqTime = (double) (System.currentTimeMillis () - freqBeginTime)/1000;
 
                     Message message = new Message ();
                     message.what = updateSawFreq;
                     handler.sendMessage ( message );
+
+                    readFreqFinishTag = false;
                 }
 
 
@@ -234,18 +244,30 @@ public class MainSystem extends AppCompatActivity {
 
     };
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void startFrequency(View view) {
-        if ( mStartFrequency.getText ().toString ().equals ( "开始计频" )){
+        if (socketFreq.isConnected ()){
+            if ( mStartFrequency.getText ().toString ().equals ( "开始计频" )){
 
-            sendMessage ( 0xAA );
-            sendMessage ( 0xAA );
-            mStartFrequency.setText ( "停止计频" );
-         } else if (mStartFrequency.getText ().toString ().equals ( "停止计频" ))
-             {
-            sendMessage(0xAB);
-            sendMessage(0xAB);
-            mStartFrequency.setText ( "开始计频" );
+                sendMessage ( 0xAA );
+                sendMessage ( 0xAA );
+                mStartFrequency.setText ( "停止计频" );
+                freqBeginTime =System.currentTimeMillis ();
+
+
+
+
+            } else if (mStartFrequency.getText ().toString ().equals ( "停止计频" ))
+            {
+                sendMessage(0xAB);
+                sendMessage(0xAB);
+                mStartFrequency.setText ( "开始计频" );
+            }
         }
+        else {
+            Toast.makeText ( getApplicationContext (),"Bluetooth is not connected, Please turn back!",Toast.LENGTH_LONG ).show ();
+        }
+
 
 
     }
