@@ -13,6 +13,10 @@
     <string name="title_activity_main_system">MainSystem</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="sawTemperature">传感器温度:</string>
+    <string name="sawFrequency">传感器频率:</string>
+    <string name="startFrequency">开始计频</string>
+    <string name="stopFrequency">停止计频</string>
 
 
 </resources>

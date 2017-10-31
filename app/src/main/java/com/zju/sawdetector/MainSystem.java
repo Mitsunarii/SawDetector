@@ -1,18 +1,24 @@
 package com.zju.sawdetector;
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
+import android.content.Intent;
+import android.net.wifi.WifiEnterpriseConfig;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
 
 
@@ -20,15 +26,32 @@ import java.util.UUID;
 public class MainSystem extends AppCompatActivity {
 
     private InputStream mFreqInput;
+    BluetoothSocket socketFreq;
+    private OutputStream mFreqOutput;
+
 
     //SAW传感器温度读取
-    int readTempTag;
-    boolean readFinishTag  = false;
+    int readTempTag =0;
+    boolean readTempFinishTag  = false;
     int tempHigh, tempLow;
     double sawTemp;
     private TextView sawTempShow;
 
+    //SAW传感器频率读取
+    boolean freqCheckTag = false;
+    int readFreqTag =0;
+    boolean readFreqFinishTag  = false;
+    int sensor2,sensor1,sensor0,ref2,ref1,ref0;
+    long sensor,ref;
+    double sawFreq;
+    private TextView sawFreqShow;
+
+    Button mStartFrequency;
+
     public static final int updateSawTemp = 1;
+    public static final int updateSawFreq =2;
+
+
     @SuppressLint("HandlerLeak")
     private Handler handler = new Handler () {
         @SuppressLint("DefaultLocale")
@@ -37,6 +60,9 @@ public class MainSystem extends AppCompatActivity {
             switch (msg.what){
                 case updateSawTemp:
                      sawTempShow.setText(String.format("%.2f", sawTemp));
+                    break;
+                case updateSawFreq:
+                     sawFreqShow.setText (String.format("%.2f", sawFreq));
                     break;
                 default:
                     break;
@@ -52,7 +78,11 @@ public class MainSystem extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main_system);
         sawTempShow = (TextView) findViewById(R.id.textViewSawTemp);
+        sawFreqShow = (TextView) findViewById (R.id.textViewSawFreq);
+        mStartFrequency = (Button ) findViewById ( R.id.button_startFrequency );
         threadfreq.start();//读取FrequencyDetector蓝牙数据
+
+
 
     }
 
@@ -63,23 +93,29 @@ public class MainSystem extends AppCompatActivity {
             //BluetoothDevice temp = SystemConfig.getTemperatureController();
 
             UUID uuid = UUID.fromString ( "00001101-0000-1000-8000-00805F9B34FB" );
-            BluetoothSocket socket;
+
             try {
-                socket = freq.createRfcommSocketToServiceRecord ( uuid );
+                socketFreq = freq.createRfcommSocketToServiceRecord ( uuid );
             } catch (IOException e) {
                 e.printStackTrace ();
                 return;
             }
 
             try {
-                socket.connect ();
+                socketFreq.connect ();
             } catch (IOException e) {
                 e.printStackTrace ();
                 return;
             }
 
             try {
-                mFreqInput = socket.getInputStream ();
+                mFreqOutput = socketFreq.getOutputStream ();
+            } catch (IOException e) {
+                e.printStackTrace ();
+            }
+
+            try {
+                mFreqInput = socketFreq.getInputStream ();
             } catch (IOException e) {
                 e.printStackTrace ();
             }
@@ -100,38 +136,93 @@ public class MainSystem extends AppCompatActivity {
                 if (length <= 0) {
                     return;
                 }
-                String tempStr;
-                tempStr = bytesToHexString ( buffer );
-                int tempInt = strToInt ( tempStr );
-
-                if (tempInt == 539 && readTempTag == 0) {
+                //String tempStr;
+               // tempStr = bytesToHexString ( buffer );
+                int tempInt = getInt(buffer);
+                if (tempInt == 0x9A && !freqCheckTag && readFreqTag ==0 && readTempTag == 0){
+                    freqCheckTag = true;
+                }
+                else if (tempInt == 0xA9 && freqCheckTag){
+                    readFreqTag =6;
+                    readFreqFinishTag  = false;
+                    freqCheckTag = false;
+                }
+                else if (tempInt ==0xAA && readTempTag == 0) {
                     readTempTag = 2;
-                    readFinishTag = false;
+                    readTempFinishTag = false;
                 } else {
+
+                    switch (readFreqTag)
+                    {
+                        case 6:
+                            sensor2 = tempInt;
+                            break;
+                        case 5:
+                            sensor2 = tempInt;
+                            break;
+                        case 4:
+                            sensor2 = tempInt;
+                            break;
+                        case 3:
+                            ref2 = tempInt;
+                            break;
+                        case 2:
+                            ref1 = tempInt;
+                            break;
+                        case 1:
+                            ref0 = tempInt;
+                            readFreqFinishTag = true;
+                            break;
+                        default:
+                            break;
+
+                    }
+
+                    readFreqTag--;
+                    if (readFreqTag < 0)
+                        readFreqTag = 0;
+
                     switch (readTempTag) {
                         case 2:
                             tempHigh = tempInt;
                             break;
                         case 1:
                             tempLow = tempInt;
-                            readFinishTag = true;
+                            readTempFinishTag = true;
                             break;
                         default:
                             break;
                     }
+
+
+
                     readTempTag--;
                     if (readTempTag < 0)
                         readTempTag = 0;
                 }
 
-                if (readFinishTag) {
+                if (readTempFinishTag) {
                     sawTemp = tempHigh * 3.3024 + tempLow * 0.0129 - 251.43;
 
                     Message message = new Message ();
                     message.what = updateSawTemp;
                     handler.sendMessage ( message );
+                }
+
+                if(readFreqFinishTag){
+                    sensor = (sensor2 << 16) + (sensor1 << 8) + sensor0;
+                    ref = (ref2 << 16) + (ref1 << 8) + ref0;
+                    if (ref != 0){
+                        sawFreq = (100000000 * (double)sensor) / (double)ref;
+                    }else {
+                        sawFreq = 0;
+                    }
 
 
+
+                    Message message = new Message ();
+                    message.what = updateSawFreq;
+                    handler.sendMessage ( message );
                 }
 
 
@@ -143,7 +234,21 @@ public class MainSystem extends AppCompatActivity {
 
     };
 
+    public void startFrequency(View view) {
+        if ( mStartFrequency.getText ().toString ().equals ( "开始计频" )){
 
+            sendMessage ( 0xAA );
+            sendMessage ( 0xAA );
+            mStartFrequency.setText ( "停止计频" );
+         } else if (mStartFrequency.getText ().toString ().equals ( "停止计频" ))
+             {
+            sendMessage(0xAB);
+            sendMessage(0xAB);
+            mStartFrequency.setText ( "开始计频" );
+        }
+
+
+    }
 
 
     public static String bytesToHexString( byte[] b) {
@@ -160,27 +265,35 @@ public class MainSystem extends AppCompatActivity {
         return a;
     }
 
-    public static int strToInt( String str ){
-        int i = 0;
-        int num = 0;
-        boolean isNeg = false;
-
-        //Check for negative sign; if it's there, set the isNeg flag
-        if (str.charAt(0) == '-') {
-            isNeg = true;
-            i = 1;
-        }
-
-        //Process each character of the string;
-        while( i < str.length()) {
-            num *= 10;
-            num += str.charAt(i++) - '0'; //Minus the ASCII code of '0' to get the value of the charAt(i++).
-        }
-
-        if (isNeg)
-            num = -num;
-        return num;
+    public static int getInt(byte[] bytes)
+    {
+        return (0xff & bytes[0]);
     }
+
+    public void sendMessage(int msg) {
+        try {
+            if (mFreqOutput == null) {
+                Log.i("info", "null message");
+                return;
+            }
+            // write message
+            byte buffer = (byte) msg;
+            mFreqOutput.write(buffer);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            try {
+                if (mFreqOutput != null) {
+                    mFreqOutput.flush();
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
 
 
 }
