@@ -3,6 +3,7 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -13,14 +14,23 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.achartengine.GraphicalView;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+
+import java.util.Timer;
 import java.util.UUID;
+
+import com.zju.sawdetector.ChartService;
+
+
 
 
 
@@ -51,13 +61,20 @@ public class MainSystem extends AppCompatActivity {
 
     Button mStartFrequency;
 
+
     public static final int updateSawTemp = 1;
     public static final int updateSawFreq =2;
+
+    //画图
+    LinearLayout mFreqChart;
+    private GraphicalView FreqChartView;
+    private ChartService mFreqService;
+    private Timer timer;
 
 
     @SuppressLint("HandlerLeak")
     private Handler handler = new Handler () {
-        @SuppressLint("DefaultLocale")
+        @SuppressLint({"DefaultLocale", "SetTextI18n"})
         public void handleMessage(Message msg){
 
             switch (msg.what){
@@ -66,6 +83,7 @@ public class MainSystem extends AppCompatActivity {
                     break;
                 case updateSawFreq:
                      sawFreqShow.setText ("频率： " + String.format("%.2f", sawFreq)+ "  时间： " + String.valueOf ( freqTime ));
+                     mFreqService.updateChart (freqTime,sawFreq);
                     break;
                 default:
                     break;
@@ -80,6 +98,19 @@ public class MainSystem extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main_system);
+
+
+        mFreqChart = (LinearLayout)findViewById(R.id.frequency_curve);
+        mFreqService = new ChartService ( this );
+        mFreqService.setXYMultipleSeriesDataset ( " " );
+        mFreqService.setXYMultipleSeriesRenderer (100, 100, " ", "时间", "频率",
+                Color.RED, Color.RED, Color.RED, Color.BLACK);
+        FreqChartView = mFreqService.getGraphicalView ();
+        mFreqChart.addView ( FreqChartView,new LinearLayout.LayoutParams
+                ( LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT));
+
+
+
 
 
 
@@ -271,6 +302,10 @@ public class MainSystem extends AppCompatActivity {
 
 
     }
+
+
+
+
 
 
     public static String bytesToHexString( byte[] b) {
