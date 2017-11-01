@@ -19,16 +19,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.achartengine.GraphicalView;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 
-import java.util.Timer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
-
-import com.zju.sawdetector.ChartService;
 
 
 
@@ -59,6 +57,7 @@ public class MainSystem extends AppCompatActivity {
     private long freqBeginTime;
     private double freqTime;
 
+
     Button mStartFrequency;
 
 
@@ -69,7 +68,9 @@ public class MainSystem extends AppCompatActivity {
     LinearLayout mFreqChart;
     private GraphicalView FreqChartView;
     private ChartService mFreqService;
-    private Timer timer;
+    private double minX,maxX,minY,maxY;
+    Boolean StartFrequencyTag = false;
+
 
 
     @SuppressLint("HandlerLeak")
@@ -84,6 +85,7 @@ public class MainSystem extends AppCompatActivity {
                 case updateSawFreq:
                      sawFreqShow.setText ("频率： " + String.format("%.2f", sawFreq)+ "  时间： " + String.valueOf ( freqTime ));
                      mFreqService.updateChart (freqTime,sawFreq);
+
                     break;
                 default:
                     break;
@@ -103,7 +105,7 @@ public class MainSystem extends AppCompatActivity {
         mFreqChart = (LinearLayout)findViewById(R.id.frequency_curve);
         mFreqService = new ChartService ( this );
         mFreqService.setXYMultipleSeriesDataset ( " " );
-        mFreqService.setXYMultipleSeriesRenderer (100, 100, " ", "时间", "频率",
+        mFreqService.setXYMultipleSeriesRenderer (10, 10, " ", "时间", "频率",
                 Color.RED, Color.RED, Color.RED, Color.BLACK);
         FreqChartView = mFreqService.getGraphicalView ();
         mFreqChart.addView ( FreqChartView,new LinearLayout.LayoutParams
@@ -117,11 +119,55 @@ public class MainSystem extends AppCompatActivity {
         sawTempShow = (TextView) findViewById(R.id.textViewSawTemp);
         sawFreqShow = (TextView) findViewById (R.id.textViewSawFreq);
         mStartFrequency = (Button ) findViewById ( R.id.button_startFrequency );
+
+
+        updatefreq.start ();
         threadfreq.start();//读取FrequencyDetector蓝牙数据
 
 
 
     }
+
+    Thread updatefreq = new Thread ( ){
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @Override
+        public void run() {
+
+                for (; ; ) {
+
+                    try {
+                        sleep ( 80 );
+                    } catch (InterruptedException e) {
+                        e.printStackTrace ();
+                    }
+
+                    if (maxY < sawFreq)
+                        maxY = sawFreq;
+                    else if (minY > sawFreq)
+                        minY = sawFreq;
+
+                    if (maxX < freqTime)
+                        maxX = freqTime;
+                    else if (minX > freqTime)
+                        minX = freqTime;
+
+
+                    if (StartFrequencyTag)
+                    {
+                        mFreqService.multipleSeriesRenderer.setRange (new double[] { maxX-10, maxX, minY-10, maxY+10 });
+                        Message message = new Message ();
+                        message.what = updateSawFreq;
+                        handler.sendMessage ( message );
+                    }
+
+
+                }
+            }
+
+
+
+
+    };
 
     Thread threadfreq = new Thread() {
         @RequiresApi(api = Build.VERSION_CODES.O)
@@ -174,8 +220,7 @@ public class MainSystem extends AppCompatActivity {
                 if (length <= 0) {
                     return;
                 }
-                //String tempStr;
-               // tempStr = bytesToHexString ( buffer );
+
                 int tempInt = getInt(buffer);
                 if (tempInt == 0x9A && !freqCheckTag && readFreqTag ==0 && readTempTag == 0){
                     freqCheckTag = true;
@@ -259,11 +304,10 @@ public class MainSystem extends AppCompatActivity {
 
                     freqTime = (double) (System.currentTimeMillis () - freqBeginTime)/1000;
 
-                    Message message = new Message ();
-                    message.what = updateSawFreq;
-                    handler.sendMessage ( message );
-
                     readFreqFinishTag = false;
+
+
+
                 }
 
 
@@ -280,19 +324,36 @@ public class MainSystem extends AppCompatActivity {
         if (socketFreq.isConnected ()){
             if ( mStartFrequency.getText ().toString ().equals ( "开始计频" )){
 
+
+                StartFrequencyTag = false;
+
+                mFreqService.mSeries.clear ();
+                FreqChartView.repaint ();
+
+                StartFrequencyTag = true;
+
+                //FreqChartView.releasePointerCapture ();
+
                 sendMessage ( 0xAA );
                 sendMessage ( 0xAA );
                 mStartFrequency.setText ( "停止计频" );
                 freqBeginTime =System.currentTimeMillis ();
-
+                //updatefreq.start ();
+                minX = 0;
+                maxX = 0;
+                minY = 0;
+                maxY = 0;
 
 
 
             } else if (mStartFrequency.getText ().toString ().equals ( "停止计频" ))
             {
+                StartFrequencyTag = false;
                 sendMessage(0xAB);
                 sendMessage(0xAB);
                 mStartFrequency.setText ( "开始计频" );
+                //updatefreq.interrupt ();
+
             }
         }
         else {
@@ -301,6 +362,10 @@ public class MainSystem extends AppCompatActivity {
 
 
 
+    }
+
+    public void autoshape (View view) {
+        mFreqService.multipleSeriesRenderer.setRange (new double[] { minX, maxX, minY-10, maxY+10 });
     }
 
 

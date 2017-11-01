@@ -17,6 +17,8 @@
     <string name="sawFrequency">传感器频率:</string>
     <string name="startFrequency">开始计频</string>
     <string name="stopFrequency">停止计频</string>
+    <string name="autoshape">自动调整坐标轴</string>
+
 
 
 </resources>
