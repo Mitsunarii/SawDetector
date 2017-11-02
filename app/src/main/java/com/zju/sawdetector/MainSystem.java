@@ -68,7 +68,8 @@ public class MainSystem extends AppCompatActivity {
     LinearLayout mFreqChart;
     private GraphicalView FreqChartView;
     private ChartService mFreqService;
-    private double minX,maxX,minY,maxY;
+    private double minY;
+    private double maxY;
     Boolean StartFrequencyTag = false;
 
 
@@ -136,25 +137,20 @@ public class MainSystem extends AppCompatActivity {
                 for (; ; ) {
 
                     try {
-                        sleep ( 80 );
+                        sleep ( 150 );
                     } catch (InterruptedException e) {
                         e.printStackTrace ();
                     }
 
-                    if (maxY < sawFreq)
-                        maxY = sawFreq;
-                    else if (minY > sawFreq)
-                        minY = sawFreq;
-
-                    if (maxX < freqTime)
-                        maxX = freqTime;
-                    else if (minX > freqTime)
-                        minX = freqTime;
 
 
-                    if (StartFrequencyTag)
+                    if (StartFrequencyTag && sawFreq != 0)
                     {
-                        mFreqService.multipleSeriesRenderer.setRange (new double[] { maxX-10, maxX, minY-10, maxY+10 });
+                       /* if (maxY < sawFreq)
+                            maxY = sawFreq;
+                        else if (minY > sawFreq)
+                            minY = sawFreq;*/
+                        mFreqService.multipleSeriesRenderer.setRange (new double[] { freqTime-5, freqTime, 0, 1000000 });
                         Message message = new Message ();
                         message.what = updateSawFreq;
                         handler.sendMessage ( message );
@@ -297,7 +293,7 @@ public class MainSystem extends AppCompatActivity {
                     sensor = (sensor2 << 16) + (sensor1 << 8) + sensor0;
                     ref = (ref2 << 16) + (ref1 << 8) + ref0;
                     if (ref != 0){
-                        sawFreq = (100000000 * (double)sensor) / (double)ref;
+                        sawFreq = 100000*(double)sensor / (double)ref;
                     }else {
                         sawFreq = 0;
                     }
@@ -325,34 +321,45 @@ public class MainSystem extends AppCompatActivity {
             if ( mStartFrequency.getText ().toString ().equals ( "开始计频" )){
 
 
-                StartFrequencyTag = false;
-
-                mFreqService.mSeries.clear ();
-                FreqChartView.repaint ();
-
+                //
                 StartFrequencyTag = true;
-
-                //FreqChartView.releasePointerCapture ();
 
                 sendMessage ( 0xAA );
                 sendMessage ( 0xAA );
                 mStartFrequency.setText ( "停止计频" );
                 freqBeginTime =System.currentTimeMillis ();
+
+                mFreqChart.removeAllViews ();
+                mFreqService.multipleSeriesDataset.removeSeries ( mFreqService.mSeries );
+                mFreqService.mSeries.clear ();
+                mFreqService.setXYMultipleSeriesDataset ( " " );
+                mFreqService.setXYMultipleSeriesRenderer (10, 10, " ", "时间", "频率",
+                        Color.RED, Color.RED, Color.RED, Color.BLACK);
+                FreqChartView = mFreqService.getGraphicalView ();
+                mFreqChart.addView ( FreqChartView,new LinearLayout.LayoutParams
+                        ( LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT));
+
+
+
+
                 //updatefreq.start ();
-                minX = 0;
-                maxX = 0;
-                minY = 0;
-                maxY = 0;
+
+              //  minY = 2000000;
+             //   maxY = 0;
 
 
 
             } else if (mStartFrequency.getText ().toString ().equals ( "停止计频" ))
             {
-                StartFrequencyTag = false;
+
+
                 sendMessage(0xAB);
                 sendMessage(0xAB);
                 mStartFrequency.setText ( "开始计频" );
                 //updatefreq.interrupt ();
+                StartFrequencyTag = false;
+                mFreqService.multipleSeriesRenderer.setRange(new double[] { 0, freqTime, 0, 1000000 });
+
 
             }
         }
@@ -362,10 +369,6 @@ public class MainSystem extends AppCompatActivity {
 
 
 
-    }
-
-    public void autoshape (View view) {
-        mFreqService.multipleSeriesRenderer.setRange (new double[] { minX, maxX, minY-10, maxY+10 });
     }
 
 

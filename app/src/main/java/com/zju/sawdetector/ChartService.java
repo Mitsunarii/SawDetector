@@ -100,8 +100,10 @@ public class ChartService {
         multipleSeriesRenderer.setLegendTextSize(30);
         multipleSeriesRenderer.setPointSize(1f);//曲线描点尺寸
 
+
         multipleSeriesRenderer.setFitLegend(true);
-        multipleSeriesRenderer.setMargins(new int[] { 60, 80, 25, 60 });
+
+        multipleSeriesRenderer.setMargins(new int[] { 60, 120, 25, 60 });
         multipleSeriesRenderer.setShowGrid(true);
         multipleSeriesRenderer.setZoomEnabled(true, true);
         multipleSeriesRenderer.setPanEnabled(true);
@@ -116,7 +118,9 @@ public class ChartService {
         mRenderer.setPointStyle(PointStyle.CIRCLE);//描点风格，可以为圆点，方形点等等
         mRenderer.setLineWidth (5);
         multipleSeriesRenderer.setInScroll (true);
+        //multipleSeriesRenderer.setClickEnabled ( true );
         multipleSeriesRenderer.addSeriesRenderer(mRenderer);
+        multipleSeriesRenderer.setShowLegend ( false );
     }
 
     /**
@@ -146,5 +150,7 @@ public class ChartService {
         }
         mGraphicalView.repaint ();//此处也可以调用invalidate()
     }
+
+
 
 }
