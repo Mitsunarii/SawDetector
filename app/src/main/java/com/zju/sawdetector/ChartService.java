@@ -83,19 +83,19 @@ public class ChartService {
         mRenderer = new XYSeriesRenderer();
         if (chartTitle != null) {
             multipleSeriesRenderer.setChartTitle(chartTitle);
-        }
 
+        }
 
         multipleSeriesRenderer.setXTitle(xTitle);
         multipleSeriesRenderer.setYTitle(yTitle);
         multipleSeriesRenderer.setRange(new double[] { 0, maxX, 0, maxY });//xy轴的范围
         multipleSeriesRenderer.setLabelsColor(labelColor);
-        multipleSeriesRenderer.setXLabels(20);
-        multipleSeriesRenderer.setYLabels(20);
+        multipleSeriesRenderer.setXLabels(30);
+        multipleSeriesRenderer.setYLabels(30);
         multipleSeriesRenderer.setXLabelsAlign(Align.RIGHT);
         multipleSeriesRenderer.setYLabelsAlign(Align.RIGHT);
         multipleSeriesRenderer.setAxisTitleTextSize(30);
-        multipleSeriesRenderer.setChartTitleTextSize(30);
+        multipleSeriesRenderer.setChartTitleTextSize(60);
         multipleSeriesRenderer.setLabelsTextSize(30);
         multipleSeriesRenderer.setLegendTextSize(30);
         multipleSeriesRenderer.setPointSize(1f);//曲线描点尺寸
@@ -103,7 +103,7 @@ public class ChartService {
 
         multipleSeriesRenderer.setFitLegend(true);
 
-        multipleSeriesRenderer.setMargins(new int[] { 60, 120, 25, 60 });
+        multipleSeriesRenderer.setMargins(new int[] { 25, 160, 25, 70 });
         multipleSeriesRenderer.setShowGrid(true);
         multipleSeriesRenderer.setZoomEnabled(true, true);
         multipleSeriesRenderer.setPanEnabled(true);
@@ -111,7 +111,7 @@ public class ChartService {
         multipleSeriesRenderer.setAxesColor(axeColor);
         multipleSeriesRenderer.setGridColor(gridColor);
         multipleSeriesRenderer.setBackgroundColor(Color.BLACK);//背景色
-        multipleSeriesRenderer.setMarginsColor(Color.GRAY);//边距背景色，默认背景色为黑色，这里修改为白色
+        multipleSeriesRenderer.setMarginsColor(Color.GRAY);//边距背景色，默认背景色为黑色
         mRenderer = new XYSeriesRenderer();
         mRenderer.setColor(curveColor);
         mRenderer.setFillPoints ( false );
@@ -121,6 +121,8 @@ public class ChartService {
         //multipleSeriesRenderer.setClickEnabled ( true );
         multipleSeriesRenderer.addSeriesRenderer(mRenderer);
         multipleSeriesRenderer.setShowLegend ( false );
+        multipleSeriesRenderer.setYLabels ( 10 );
+        multipleSeriesRenderer.setXLabels ( 10 );
     }
 
     /**
@@ -132,6 +134,8 @@ public class ChartService {
      *            新加点的y坐标
      */
     public void updateChart(double x, double y) {
+
+
         mSeries.add(x, y);
 
         mGraphicalView.invalidate();//此处也可以调用invalidate()

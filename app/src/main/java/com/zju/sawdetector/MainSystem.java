@@ -50,8 +50,10 @@ public class MainSystem extends AppCompatActivity {
     boolean freqCheckTag = false;
     int readFreqTag =0;
     boolean readFreqFinishTag  = false;
-    int sensor2,sensor1,sensor0,ref2,ref1,ref0;
+    long sensor2,sensor1,sensor0,ref2,ref1,ref0;
+
     long sensor,ref;
+
     double sawFreq;
     private TextView sawFreqShow;
     private long freqBeginTime;
@@ -84,7 +86,7 @@ public class MainSystem extends AppCompatActivity {
                      sawTempShow.setText(String.format("%.2f", sawTemp));
                     break;
                 case updateSawFreq:
-                     sawFreqShow.setText ("频率： " + String.format("%.2f", sawFreq)+ "  时间： " + String.valueOf ( freqTime ));
+                   //  sawFreqShow.setText ("频率： " + String.format("%.2f", sawFreq)+ "  时间： " + String.valueOf ( freqTime ));
                      mFreqService.updateChart (freqTime,sawFreq);
 
                     break;
@@ -106,11 +108,12 @@ public class MainSystem extends AppCompatActivity {
         mFreqChart = (LinearLayout)findViewById(R.id.frequency_curve);
         mFreqService = new ChartService ( this );
         mFreqService.setXYMultipleSeriesDataset ( " " );
-        mFreqService.setXYMultipleSeriesRenderer (10, 10, " ", "时间", "频率",
+        mFreqService.setXYMultipleSeriesRenderer (20, 500000, "", "时间", "频率",
                 Color.RED, Color.RED, Color.RED, Color.BLACK);
         FreqChartView = mFreqService.getGraphicalView ();
         mFreqChart.addView ( FreqChartView,new LinearLayout.LayoutParams
                 ( LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT));
+        mFreqService.updateChart ( 0,0 );
 
 
 
@@ -118,7 +121,7 @@ public class MainSystem extends AppCompatActivity {
 
 
         sawTempShow = (TextView) findViewById(R.id.textViewSawTemp);
-        sawFreqShow = (TextView) findViewById (R.id.textViewSawFreq);
+       // sawFreqShow = (TextView) findViewById (R.id.textViewSawFreq);
         mStartFrequency = (Button ) findViewById ( R.id.button_startFrequency );
 
 
@@ -144,13 +147,16 @@ public class MainSystem extends AppCompatActivity {
 
 
 
-                    if (StartFrequencyTag && sawFreq != 0)
+                    if (StartFrequencyTag)
                     {
-                       /* if (maxY < sawFreq)
+                        if (maxY < sawFreq)
                             maxY = sawFreq;
                         else if (minY > sawFreq)
-                            minY = sawFreq;*/
-                        mFreqService.multipleSeriesRenderer.setRange (new double[] { freqTime-5, freqTime, 0, 1000000 });
+                            minY = sawFreq;
+
+                        mFreqService.multipleSeriesRenderer.setRange (new double[] { freqTime-5, freqTime, minY, maxY });
+                        //mFreqService.multipleSeriesRenderer.setChartTitle ( "传感器频率曲线：" );
+
                         Message message = new Message ();
                         message.what = updateSawFreq;
                         handler.sendMessage ( message );
@@ -217,7 +223,7 @@ public class MainSystem extends AppCompatActivity {
                     return;
                 }
 
-                int tempInt = getInt(buffer);
+                int tempInt = (buffer[0] & 0xff);
                 if (tempInt == 0x9A && !freqCheckTag && readFreqTag ==0 && readTempTag == 0){
                     freqCheckTag = true;
                 }
@@ -237,10 +243,10 @@ public class MainSystem extends AppCompatActivity {
                             sensor2 = tempInt;
                             break;
                         case 5:
-                            sensor2 = tempInt;
+                            sensor1 = tempInt;
                             break;
                         case 4:
-                            sensor2 = tempInt;
+                            sensor0 = tempInt;
                             break;
                         case 3:
                             ref2 = tempInt;
@@ -281,7 +287,7 @@ public class MainSystem extends AppCompatActivity {
                 }
 
                 if (readTempFinishTag) {
-                    sawTemp = tempHigh * 3.3024 + tempLow * 0.0129 - 251.43;
+                    sawTemp = ((tempHigh << 8) + tempLow) * 0.0129 - 251.43;
 
                     Message message = new Message ();
                     message.what = updateSawTemp;
@@ -292,8 +298,13 @@ public class MainSystem extends AppCompatActivity {
                 if(readFreqFinishTag){
                     sensor = (sensor2 << 16) + (sensor1 << 8) + sensor0;
                     ref = (ref2 << 16) + (ref1 << 8) + ref0;
+
+
+
+                    System.out.println (sensor + "   " + ref );
+
                     if (ref != 0){
-                        sawFreq = 100000*(double)sensor / (double)ref;
+                        sawFreq = (100000000*((double)sensor)) / ((double)ref);
                     }else {
                         sawFreq = 0;
                     }
@@ -344,8 +355,8 @@ public class MainSystem extends AppCompatActivity {
 
                 //updatefreq.start ();
 
-              //  minY = 2000000;
-             //   maxY = 0;
+                minY = 2000000;
+                maxY = 0;
 
 
 
@@ -358,7 +369,8 @@ public class MainSystem extends AppCompatActivity {
                 mStartFrequency.setText ( "开始计频" );
                 //updatefreq.interrupt ();
                 StartFrequencyTag = false;
-                mFreqService.multipleSeriesRenderer.setRange(new double[] { 0, freqTime, 0, 1000000 });
+                mFreqService.multipleSeriesRenderer.setRange(new double[] { 0, freqTime, minY, maxY });
+                mFreqService.mGraphicalView.repaint ();
 
 
             }
@@ -375,25 +387,6 @@ public class MainSystem extends AppCompatActivity {
 
 
 
-
-    public static String bytesToHexString( byte[] b) {
-        String a = "";
-        for (int i = 0; i < b.length; i++) {
-            String hex = Integer.toHexString(b[i] & 0xFF);
-            if (hex.length() == 1) {
-                hex = '0' + hex;
-            }
-
-            a = a+hex;
-        }
-
-        return a;
-    }
-
-    public static int getInt(byte[] bytes)
-    {
-        return (0xff & bytes[0]);
-    }
 
     public void sendMessage(int msg) {
         try {
