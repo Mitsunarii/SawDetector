@@ -55,7 +55,8 @@ public class MainSystem extends AppCompatActivity {
     long sensor,ref;
 
     double sawFreq;
-    private TextView sawFreqShow;
+    double sawDiff;
+    double sawDiffFilter[];
     private long freqBeginTime;
     private double freqTime;
 
@@ -70,9 +71,15 @@ public class MainSystem extends AppCompatActivity {
     LinearLayout mFreqChart;
     private GraphicalView FreqChartView;
     private ChartService mFreqService;
-    private double minY;
-    private double maxY;
+   // private double minY;
+    //private double maxY;
     Boolean StartFrequencyTag = false;
+
+    LinearLayout mFreqDiffChart;
+    private GraphicalView FreqDiffChartView;
+    private ChartService mFreqDiffService;
+
+
 
 
 
@@ -86,8 +93,8 @@ public class MainSystem extends AppCompatActivity {
                      sawTempShow.setText(String.format("%.2f", sawTemp));
                     break;
                 case updateSawFreq:
-                   //  sawFreqShow.setText ("频率： " + String.format("%.2f", sawFreq)+ "  时间： " + String.valueOf ( freqTime ));
                      mFreqService.updateChart (freqTime,sawFreq);
+                     mFreqDiffService.updateChart ( freqTime,sawDiff);
 
                     break;
                 default:
@@ -116,7 +123,15 @@ public class MainSystem extends AppCompatActivity {
         mFreqService.updateChart ( 0,0 );
 
 
-
+        mFreqDiffChart = (LinearLayout)findViewById(R.id.frequency_diff);
+        mFreqDiffService = new ChartService ( this );
+        mFreqDiffService.setXYMultipleSeriesDataset ( " " );
+        mFreqDiffService.setXYMultipleSeriesRenderer (20, 10000, "", "时间", "频率差分",
+                Color.RED, Color.RED, Color.RED, Color.BLACK);
+        FreqDiffChartView = mFreqDiffService.getGraphicalView ();
+        mFreqDiffChart.addView ( FreqDiffChartView,new LinearLayout.LayoutParams
+                ( LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT));
+        mFreqDiffService.updateChart ( 0,0 );
 
 
 
@@ -125,37 +140,37 @@ public class MainSystem extends AppCompatActivity {
         mStartFrequency = (Button ) findViewById ( R.id.button_startFrequency );
 
 
-        updatefreq.start ();
-        threadfreq.start();//读取FrequencyDetector蓝牙数据
+        updateFreq.start ();
+        threadFreq.start();//读取FrequencyDetector蓝牙数据
+
 
 
 
     }
 
-    Thread updatefreq = new Thread ( ){
+    Thread updateFreq = new Thread ( ){
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void run() {
 
                 for (; ; ) {
-
                     try {
-                        sleep ( 150 );
+                        sleep ( 50 );
                     } catch (InterruptedException e) {
                         e.printStackTrace ();
                     }
-
-
-
                     if (StartFrequencyTag)
                     {
-                        if (maxY < sawFreq)
+                       /* if (maxY < sawFreq)
                             maxY = sawFreq;
                         else if (minY > sawFreq)
                             minY = sawFreq;
-
-                        mFreqService.multipleSeriesRenderer.setRange (new double[] { freqTime-5, freqTime, minY, maxY });
-                        //mFreqService.multipleSeriesRenderer.setChartTitle ( "传感器频率曲线：" );
+                        mFreqService.multipleSeriesRenderer.setRange (new double[] { freqTime-2, freqTime, 150000, 250000 });
+                        mFreqDiffService.multipleSeriesRenderer.setRange (new double[] { freqTime-2, freqTime, 0, 15000 });
+                        sawDiff = mFreqService.calculateDiff ();*/
+                        mFreqService.multipleSeriesRenderer.setRange (new double[] { freqTime-2, freqTime, 180000, 250000 });
+                        mFreqDiffService.multipleSeriesRenderer.setRange (new double[] { freqTime-2, freqTime, 0, 10000 });
+                        sawDiff = mFreqService.calculateDiff ();
 
                         Message message = new Message ();
                         message.what = updateSawFreq;
@@ -171,7 +186,13 @@ public class MainSystem extends AppCompatActivity {
 
     };
 
-    Thread threadfreq = new Thread() {
+
+
+
+
+
+
+    Thread threadFreq = new Thread() {
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void run() {
@@ -301,7 +322,7 @@ public class MainSystem extends AppCompatActivity {
 
 
 
-                    System.out.println (sensor + "   " + ref );
+                    //System.out.println (sensor + "   " + ref );
 
                     if (ref != 0){
                         sawFreq = (100000000*((double)sensor)) / ((double)ref);
@@ -351,12 +372,22 @@ public class MainSystem extends AppCompatActivity {
                         ( LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT));
 
 
+                mFreqDiffChart.removeAllViews ();
+                mFreqDiffService.multipleSeriesDataset.removeSeries ( mFreqService.mSeries );
+                mFreqDiffService.mSeries.clear ();
+                mFreqDiffService.setXYMultipleSeriesDataset ( " " );
+                mFreqDiffService.setXYMultipleSeriesRenderer (10, 10, " ", "时间", "频率差分",
+                        Color.RED, Color.RED, Color.RED, Color.BLACK);
+                FreqDiffChartView = mFreqDiffService.getGraphicalView ();
+                mFreqDiffChart.addView ( FreqDiffChartView,new LinearLayout.LayoutParams
+                        ( LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT));
+
 
 
                 //updatefreq.start ();
 
-                minY = 2000000;
-                maxY = 0;
+                //minY = 2000000;
+               // maxY = 0;
 
 
 
@@ -369,8 +400,12 @@ public class MainSystem extends AppCompatActivity {
                 mStartFrequency.setText ( "开始计频" );
                 //updatefreq.interrupt ();
                 StartFrequencyTag = false;
-                mFreqService.multipleSeriesRenderer.setRange(new double[] { 0, freqTime, minY, maxY });
+                mFreqService.multipleSeriesRenderer.setRange(new double[] { 0, freqTime, mFreqService.mSeries.getMinY (), mFreqService.mSeries.getMaxY ()});
                 mFreqService.mGraphicalView.repaint ();
+
+                mFreqDiffService.multipleSeriesRenderer.setRange(new double[] { 0, freqTime, 0, mFreqDiffService.mSeries.getMaxY () });
+                mFreqDiffService.mGraphicalView.repaint ();
+
 
 
             }

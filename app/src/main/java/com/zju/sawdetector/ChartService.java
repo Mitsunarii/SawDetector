@@ -103,7 +103,7 @@ public class ChartService {
 
         multipleSeriesRenderer.setFitLegend(true);
 
-        multipleSeriesRenderer.setMargins(new int[] { 25, 160, 25, 70 });
+        multipleSeriesRenderer.setMargins(new int[] { 45, 160, 25, 70 });
         multipleSeriesRenderer.setShowGrid(true);
         multipleSeriesRenderer.setZoomEnabled(true, true);
         multipleSeriesRenderer.setPanEnabled(true);
@@ -116,12 +116,12 @@ public class ChartService {
         mRenderer.setColor(curveColor);
         mRenderer.setFillPoints ( false );
         mRenderer.setPointStyle(PointStyle.CIRCLE);//描点风格，可以为圆点，方形点等等
-        mRenderer.setLineWidth (5);
+        mRenderer.setLineWidth (4);
         multipleSeriesRenderer.setInScroll (true);
         //multipleSeriesRenderer.setClickEnabled ( true );
         multipleSeriesRenderer.addSeriesRenderer(mRenderer);
         multipleSeriesRenderer.setShowLegend ( false );
-        multipleSeriesRenderer.setYLabels ( 10 );
+        multipleSeriesRenderer.setYLabels ( 5 );
         multipleSeriesRenderer.setXLabels ( 10 );
     }
 
@@ -153,6 +153,34 @@ public class ChartService {
             mSeries.add(xList.get(i), yList.get(i));
         }
         mGraphicalView.repaint ();//此处也可以调用invalidate()
+    }
+
+    public double calculateDiff()
+    {
+        int ItemCount = mSeries.getItemCount ();
+
+        double DiffY = 0;
+        //double DiffYFilter[] = new double[5] ;
+        //double temp;
+        if (ItemCount >10) {
+           /* for (int k = 0; k < 5; k++) {
+                DiffYFilter[k] = mSeries.getY ( ItemCount - 1 - k );
+            }
+
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4-i; j++) {
+                    if (DiffYFilter[j] > DiffYFilter[j + 1]) {
+                        temp = DiffYFilter[j];
+                        DiffYFilter[j] = DiffYFilter[j + 1];
+                        DiffYFilter[j + 1] = temp;
+                    }
+                }
+            }*/
+            DiffY = mSeries.getY ( ItemCount - 1 )+mSeries.getY ( ItemCount - 2 )-mSeries.getY ( ItemCount - 3 )
+                    -mSeries.getY ( ItemCount - 4 );
+        }
+        return DiffY;
+
     }
 
 
