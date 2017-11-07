@@ -160,22 +160,9 @@ public class ChartService {
         int ItemCount = mSeries.getItemCount ();
 
         double DiffY = 0;
-        //double DiffYFilter[] = new double[5] ;
-        //double temp;
-        if (ItemCount >10) {
-           /* for (int k = 0; k < 5; k++) {
-                DiffYFilter[k] = mSeries.getY ( ItemCount - 1 - k );
-            }
 
-            for (int i = 0; i < 4; i++) {
-                for (int j = 0; j < 4-i; j++) {
-                    if (DiffYFilter[j] > DiffYFilter[j + 1]) {
-                        temp = DiffYFilter[j];
-                        DiffYFilter[j] = DiffYFilter[j + 1];
-                        DiffYFilter[j + 1] = temp;
-                    }
-                }
-            }*/
+        if (ItemCount >10) {
+
             DiffY = mSeries.getY ( ItemCount - 1 )+mSeries.getY ( ItemCount - 2 )-mSeries.getY ( ItemCount - 3 )
                     -mSeries.getY ( ItemCount - 4 );
         }

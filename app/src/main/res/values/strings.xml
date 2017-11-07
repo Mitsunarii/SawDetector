@@ -15,10 +15,20 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="sawTemperature">传感器温度:</string>
     <string name="sawFrequency">传感器频率曲线</string>
-    <string name="startFrequency">开始计频</string>
-    <string name="stopFrequency">停止计频</string>
-    <string name="autoshape">自动调整坐标轴</string>
-
+    <string name="startFrequency">开始检测</string>
+    <string name="stopFrequency">停止检测</string>
+    <string name="SystemParameters">系统参数</string>
+    <string name="InletTemp">进口温度:</string>
+    <string name="ValveTemp">阀体温度:</string>
+    <string name="OutletTemp">喷口温度:</string>
+    <string name="ColumnTemp">毛细管温度:</string>
+    <string name="Volume">气路流量:</string>
+    <string name="DataSave">是否保存数据:</string>
+    <string name="AutoMode">自动模式</string>
+    <string name="SystemParameterSetting">系统参数设置</string>
+    <string name="PIDSetting">PID参数设置</string>
+    <string name="DataAnalysis">查看历史数据</string>
+    <string name="AutoSetting">流程设置</string>
 
 
 </resources>
