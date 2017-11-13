@@ -13,22 +13,24 @@
     <string name="title_activity_main_system">MainSystem</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
-    <string name="sawTemperature">传感器温度:</string>
+    <string name="sawTemperature">传感器:</string>
     <string name="sawFrequency">传感器频率曲线</string>
     <string name="startFrequency">开始检测</string>
     <string name="stopFrequency">停止检测</string>
-    <string name="SystemParameters">系统参数</string>
-    <string name="InletTemp">进口温度:</string>
-    <string name="ValveTemp">阀体温度:</string>
-    <string name="OutletTemp">喷口温度:</string>
-    <string name="ColumnTemp">毛细管温度:</string>
-    <string name="Volume">气路流量:</string>
-    <string name="DataSave">是否保存数据:</string>
+    <string name="SystemTemps">系统温度</string>
+    <string name="InletTemp">进口:</string>
+    <string name="ValveTemp">阀体:</string>
+    <string name="OutletTemp">喷口:</string>
+    <string name="ColumnTemp">毛细管:</string>
+    <string name="Volume">流量:</string>
+    <string name="DataSave">是否保存数据</string>
     <string name="AutoMode">自动模式</string>
-    <string name="SystemParameterSetting">系统参数设置</string>
+    <string name="TempParameterSetting">目标参数设置</string>
     <string name="PIDSetting">PID参数设置</string>
-    <string name="DataAnalysis">查看历史数据</string>
+    <string name="DataAnalysis">数据分析</string>
     <string name="AutoSetting">流程设置</string>
+    <string name="SystemTemp">系统参数</string>
+    <string name="TempGoal">目标值</string>
 
 
 </resources>

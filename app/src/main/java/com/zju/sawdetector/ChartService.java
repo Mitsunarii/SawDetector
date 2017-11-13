@@ -83,7 +83,6 @@ public class ChartService {
         mRenderer = new XYSeriesRenderer();
         if (chartTitle != null) {
             multipleSeriesRenderer.setChartTitle(chartTitle);
-
         }
 
         multipleSeriesRenderer.setXTitle(xTitle);
@@ -134,11 +133,9 @@ public class ChartService {
      *            新加点的y坐标
      */
     public void updateChart(double x, double y) {
-
-
         mSeries.add(x, y);
 
-        mGraphicalView.invalidate();//此处也可以调用invalidate()
+        mGraphicalView.repaint ();//此处也可以调用invalidate()
     }
 
 

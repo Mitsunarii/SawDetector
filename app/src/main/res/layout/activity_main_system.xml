@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
         android:orientation="vertical">
 
         <TextView
@@ -24,16 +24,18 @@
         <LinearLayout
             android:id="@+id/frequency_curve"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_margin="15dp"
-            android:orientation="horizontal"></LinearLayout>
+            android:layout_height="0dp"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:orientation="horizontal" />
 
         <LinearLayout
             android:id="@+id/frequency_diff"
             android:layout_width="match_parent"
-            android:layout_height="400dp"
-            android:layout_margin="15dp"
-            android:orientation="horizontal"></LinearLayout>
+            android:layout_height="0dp"
+            android:layout_margin="10dp"
+            android:layout_weight="2"
+            android:orientation="horizontal" />
 
         <Button
             android:id="@+id/button_startFrequency"
@@ -48,188 +50,343 @@
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/textView_SystemParameters"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:text="@string/SystemParameters"
-        android:textColor="@color/colorPrimary"
-        android:textSize="30sp"
-        android:textStyle="bold" />
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="10dp"
-        android:orientation="horizontal">
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.5"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/textViewSawTempLabel"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/sawTemperature"
-            android:textColor="@android:color/holo_orange_dark"
-            android:textSize="24sp" />
+            android:layout_marginHorizontal="10dp"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/textViewSawTemp"
-            android:layout_width="80dp"
+            <TextView
+                android:id="@+id/textViewSystemTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_weight="2.5"
+                android:text="@string/SystemTemp"
+                android:textColor="@android:color/holo_green_light"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textViewTempGoal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:text="@string/TempGoal"
+                android:textColor="@android:color/holo_green_light"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text=" "
-            android:textSize="24sp" />
+            android:layout_marginHorizontal="10dp"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/textViewInletTempLabel"
-            android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/textViewSawTempLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/sawTemperature"
+                android:textColor="@android:color/holo_orange_dark"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/textViewSawTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:text=" "
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/editTextSawTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+
+                android:layout_weight="1"
+                android:hint="30"
+                android:inputType="number"
+                android:visibility="visible" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/InletTemp"
-            android:textColor="@android:color/holo_orange_dark"
-            android:textSize="24sp" />
+            android:layout_marginHorizontal="10dp"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/textViewInletTemp"
-            android:layout_width="80dp"
+            <TextView
+                android:id="@+id/textViewInletTempLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/InletTemp"
+                android:textColor="@android:color/holo_orange_dark"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/textViewInletTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:text=" "
+                android:textSize="18sp" />
+            <EditText
+                android:id="@+id/editTextInletTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+
+                android:layout_weight="1"
+                android:hint="180"
+                android:inputType="number"
+                android:visibility="visible" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text=" "
-            android:textSize="24sp" />
-        <TextView
-            android:id="@+id/textViewValveTempLabel"
-            android:layout_width="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textViewValveTempLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:text="@string/ValveTemp"
+                android:textColor="@android:color/holo_orange_dark"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/textViewValveTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:text=" "
+                android:textSize="18sp" />
+            <EditText
+                android:id="@+id/editTextValveTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+
+                android:layout_weight="1"
+                android:hint="150"
+                android:inputType="number"
+                android:visibility="visible" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/ValveTemp"
-            android:textColor="@android:color/holo_orange_dark"
-            android:textSize="24sp" />
+            android:layout_marginHorizontal="10dp"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/textViewValveTemp"
-            android:layout_width="80dp"
+
+            <TextView
+                android:id="@+id/textViewOutletTempLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:text="@string/OutletTemp"
+                android:textColor="@android:color/holo_orange_dark"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/textViewOutletTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:text=" "
+                android:textSize="18sp" />
+            <EditText
+                android:id="@+id/editTextOutletTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+
+                android:layout_weight="1"
+                android:hint="150"
+                android:inputType="number"
+                android:visibility="visible" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text=" "
-            android:textSize="24sp" />
+            android:layout_marginHorizontal="10dp"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/textViewOutletTempLabel"
-            android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/textViewColumnTempLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:text="@string/ColumnTemp"
+                android:textColor="@android:color/holo_orange_dark"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/textViewColumnTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:text=" "
+                android:textSize="18sp" />
+            <EditText
+                android:id="@+id/editTextColumnTemp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+
+                android:layout_weight="1"
+                android:hint="40"
+                android:inputType="number"
+                android:visibility="visible" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/OutletTemp"
-            android:textColor="@android:color/holo_orange_dark"
-            android:textSize="24sp" />
-
-        <TextView
-            android:id="@+id/textViewOutletTemp"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content"
-            android:text=" "
-            android:textSize="24sp" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="10dp"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/textViewColumnTempLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/ColumnTemp"
-            android:textColor="@android:color/holo_orange_dark"
-            android:textSize="24sp" />
-
-        <TextView
-            android:id="@+id/textViewColumnTemp"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content"
-            android:text=" "
-            android:textSize="24sp" />
-        <TextView
-            android:id="@+id/textViewVolumeLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/Volume"
-            android:textColor="@android:color/holo_orange_dark"
-            android:textSize="24sp" />
-
-        <TextView
-            android:id="@+id/textViewVolume"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content"
-            android:text=" "
-            android:textSize="24sp" />
-
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-
-            android:text="@string/DataSave"
-            android:textColor="@android:color/holo_green_light"
-            android:textSize="24sp" />
-
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-
-            android:text="@string/AutoMode"
-            android:textColor="@android:color/holo_green_light"
-            android:textSize="24sp" />
+            android:layout_marginHorizontal="10dp"
+            android:orientation="horizontal">
 
 
+            <TextView
+                android:id="@+id/textViewVolumeLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:text="@string/Volume"
+                android:textColor="@android:color/holo_orange_dark"
+                android:textSize="18sp" />
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/textViewVolume"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:text=" "
+                android:textSize="18sp" />
+            <EditText
+                android:id="@+id/editTextVolume"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:orientation="horizontal">
+                android:layout_weight="1"
+                android:hint="3"
+                android:inputType="number"
+                android:visibility="visible" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/button_SystemParameterSetting"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/SystemParameterSetting"
+            android:text="@string/TempParameterSetting"
+            android:onClick="setParameters"
             android:textColor="@android:color/holo_red_light"
             android:textSize="24sp"
             android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/button_PIDSetting"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/PIDSetting"
-            android:textColor="@android:color/holo_red_light"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:layout_marginHorizontal="10dp"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/button_AutoSetting"
-            android:layout_width="0dp"
+            <CheckBox
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+
+                android:text="@string/DataSave"
+                android:textColor="@android:color/holo_green_light"
+                android:textSize="18sp" />
+
+            <CheckBox
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+
+                android:text="@string/AutoMode"
+                android:textColor="@android:color/holo_green_light"
+                android:textSize="18sp" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/AutoSetting"
-            android:textColor="@android:color/holo_red_light"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/button_DataAnalysis"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/DataAnalysis"
-            android:textColor="@android:color/holo_red_light"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:layout_margin="10dp"
+            android:orientation="horizontal">
 
 
+            <Button
+                android:id="@+id/button_PIDSetting"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/PIDSetting"
+                android:textColor="@android:color/holo_red_light"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/button_AutoSetting"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/AutoSetting"
+                android:textColor="@android:color/holo_red_light"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/button_DataAnalysis"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/DataAnalysis"
+                android:textColor="@android:color/holo_red_light"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+
+        </LinearLayout>
     </LinearLayout>
-
-
 
 
 </LinearLayout>

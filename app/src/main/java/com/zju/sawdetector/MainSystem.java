@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -97,6 +98,14 @@ public class MainSystem extends AppCompatActivity {
     private ChartService mFreqDiffService;
 
 
+    //系统参数设置
+    private EditText sawTempSet;
+    private EditText inletTempSet;
+    private EditText outletTempSet;
+    private EditText columnTempSet;
+    private EditText valveTempSet;
+    private EditText volumeSet;
+
 
 
 
@@ -107,18 +116,18 @@ public class MainSystem extends AppCompatActivity {
 
             switch (msg.what){
                 case updateSawTemp:
-                     sawTempShow.setText(String.format("%.1f", sawTemp));
+                    sawTempShow.setText(String.format("%.2f", sawTemp)+"℃");
+                    inletTempShow.setText(String.format("%.2f", inletTemp)+"℃");
+                    outletTempShow.setText(String.format("%.2f", outletTemp)+"℃");
+                    valveTempShow.setText(String.format("%.2f", valveTemp)+"℃");
+                    columnTempShow.setText(String.format("%.2f", columnTemp)+"℃");
+                    volumeShow.setText(String.format("%.2f", volume)+"ml/min");
                     break;
                 case updateSawFreq:
                      mFreqService.updateChart (freqTime,sawFreq);
                      mFreqDiffService.updateChart ( freqTime,sawDiff);
                 case updateSystemTemp:
 
-                    inletTempShow.setText(String.format("%.1f", inletTemp));
-                    outletTempShow.setText(String.format("%.1f", outletTemp));
-                    valveTempShow.setText(String.format("%.1f", valveTemp));
-                    columnTempShow.setText(String.format("%.1f", columnTemp));
-                    volumeShow.setText(String.format("%.1f", volume));
 
                     break;
                 default:
@@ -166,6 +175,14 @@ public class MainSystem extends AppCompatActivity {
         inletTempShow = (TextView) findViewById ( R.id.textViewInletTemp );
         volumeShow = (TextView ) findViewById ( R.id.textViewVolume );
 
+        sawTempSet = (EditText ) findViewById(R.id.editTextSawTemp);
+        inletTempSet = (EditText ) findViewById(R.id.editTextInletTemp);
+        outletTempSet = (EditText ) findViewById(R.id.editTextOutletTemp);
+        columnTempSet = (EditText ) findViewById(R.id.editTextColumnTemp);
+        valveTempSet = (EditText ) findViewById(R.id.editTextValveTemp);
+        volumeSet = (EditText ) findViewById(R.id.editTextVolume);
+
+
         mStartFrequency = (Button ) findViewById ( R.id.button_startFrequency );
 
 
@@ -187,7 +204,7 @@ public class MainSystem extends AppCompatActivity {
 
                 for (; ; ) {
                     try {
-                        sleep ( 50 );
+                        sleep ( 100 );
                     } catch (InterruptedException e) {
                         e.printStackTrace ();
                     }
@@ -346,7 +363,7 @@ public class MainSystem extends AppCompatActivity {
 
 
 
-                    //System.out.println (sensor + "   " + ref );
+                  //  System.out.println (sensor + "   " + ref );
 
                     if (ref != 0){
                         sawFreq = (100000000*((double)sensor)) / ((double)ref);
@@ -357,6 +374,8 @@ public class MainSystem extends AppCompatActivity {
                     freqTime = (double) (System.currentTimeMillis () - freqBeginTime)/1000;
 
                     readFreqFinishTag = false;
+
+
 
 
 
@@ -516,14 +535,14 @@ public class MainSystem extends AppCompatActivity {
                             TempTag--;
                             break;
                         case 1:
-                            volume = ((Temp9 << 8) + Temp10) * 0.0129 - 251.43;
+                            volume = ((Temp9 << 8) + Temp10) /1000;
                             TempTag = 0;
                            // System.out.println ( volume );
 
 
-                            Message message = new Message ();
-                            message.what = updateSystemTemp;
-                            handler.sendMessage ( message );
+                         //   Message message = new Message ();
+                         //   message.what = updateSystemTemp;
+                          //  handler.sendMessage ( message );
 
                             break;
 
@@ -554,14 +573,14 @@ public class MainSystem extends AppCompatActivity {
                 //
                 StartFrequencyTag = true;
 
-                sendMessage ( 0xAA );
-                sendMessage ( 0xAA );
+                sendFreqMessage ( 0xAA );
+                sendFreqMessage ( 0xAA );
                 mStartFrequency.setText ( "停止检测" );
                 freqBeginTime =System.currentTimeMillis ();
 
                 mFreqChart.removeAllViews ();
-                mFreqService.multipleSeriesDataset.removeSeries ( mFreqService.mSeries );
                 mFreqService.mSeries.clear ();
+                mFreqService.mSeries.clearSeriesValues ();
                 mFreqService.setXYMultipleSeriesDataset ( " " );
                 mFreqService.setXYMultipleSeriesRenderer (10, 10, " ", "时间", "频率",
                         Color.RED, Color.RED, Color.RED, Color.BLACK);
@@ -569,10 +588,9 @@ public class MainSystem extends AppCompatActivity {
                 mFreqChart.addView ( FreqChartView,new LinearLayout.LayoutParams
                         ( LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT));
 
-
                 mFreqDiffChart.removeAllViews ();
-                mFreqDiffService.multipleSeriesDataset.removeSeries ( mFreqService.mSeries );
                 mFreqDiffService.mSeries.clear ();
+                mFreqService.mSeries.clearSeriesValues ();
                 mFreqDiffService.setXYMultipleSeriesDataset ( " " );
                 mFreqDiffService.setXYMultipleSeriesRenderer (10, 10, " ", "时间", "频率差分",
                         Color.RED, Color.RED, Color.RED, Color.BLACK);
@@ -580,23 +598,13 @@ public class MainSystem extends AppCompatActivity {
                 mFreqDiffChart.addView ( FreqDiffChartView,new LinearLayout.LayoutParams
                         ( LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT));
 
-
-
-                //updatefreq.start ();
-
-                //minY = 2000000;
-               // maxY = 0;
-
-
-
             } else if (mStartFrequency.getText ().toString ().equals ( "停止检测" ))
             {
 
 
-                sendMessage(0xAB);
-                sendMessage(0xAB);
+                sendFreqMessage(0xAB);
+                sendFreqMessage(0xAB);
                 mStartFrequency.setText ( "开始检测" );
-                //updatefreq.interrupt ();
                 StartFrequencyTag = false;
                 mFreqService.multipleSeriesRenderer.setRange(new double[] { 0, freqTime, mFreqService.mSeries.getMinY (), mFreqService.mSeries.getMaxY ()});
                 mFreqService.mGraphicalView.repaint ();
@@ -617,11 +625,27 @@ public class MainSystem extends AppCompatActivity {
     }
 
 
+    public void setParameters(View view) {
+
+        //传感器温度值设置
+        int temp;
+        temp = Integer.parseInt ( sawTempSet.getText ().toString () );
+        if (temp<200 && temp>0)
+        {
+            sendFreqMessage ( temp );
+            sendFreqMessage ( 1 );
+        }
+        else
+        {
+            Toast.makeText (getApplicationContext (),"传感器温度设置不合法!",Toast.LENGTH_LONG ).show ();
+            sawTempSet.setText ("30");
+        }
+
+    }
 
 
 
-
-    public void sendMessage(int msg) {
+    public void sendFreqMessage(int msg) {
         try {
             if (mFreqOutput == null) {
                 Log.i("info", "null message");
@@ -637,6 +661,30 @@ public class MainSystem extends AppCompatActivity {
             try {
                 if (mFreqOutput != null) {
                     mFreqOutput.flush();
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void sendTempMessage(int msg) {
+        try {
+            if (mTempOutput == null) {
+                Log.i("info", "null message");
+                return;
+            }
+            // write message
+            byte buffer = (byte) msg;
+            mTempOutput.write(buffer);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            try {
+                if (mTempOutput != null) {
+                    mTempOutput.flush();
                 }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
