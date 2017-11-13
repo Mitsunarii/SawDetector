@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
 
 
     <LinearLayout
@@ -120,6 +123,7 @@
                 android:layout_weight="1"
                 android:hint="30"
                 android:inputType="number"
+                android:selectAllOnFocus="false"
                 android:visibility="visible" />
         </LinearLayout>
 
@@ -350,6 +354,47 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:orientation="horizontal">
+
+            <Switch
+                android:id="@+id/switch_sawTempWork"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:checked="false"
+                android:showText="true"
+                android:text="@string/sawTempWork"
+                android:textColor="@android:color/holo_green_light"
+                android:textSize="14sp"
+                android:visibility="visible"
+                tools:checked="false" />
+
+            <Switch
+                android:id="@+id/switch_sawTempMode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:showText="true"
+                android:text="@string/sawTempMode"
+                android:textAppearance="@style/TextAppearance.AppCompat.Notification.Info.Media"
+                android:textColor="@android:color/holo_green_light"
+                android:textOff="加热"
+                android:textOn="制冷"
+                android:textSize="14sp"
+                android:visibility="visible"
+                tools:checked="false" />
+
+
+        </LinearLayout>
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:orientation="horizontal">
 
@@ -358,6 +403,7 @@
                 android:id="@+id/button_PIDSetting"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_marginHorizontal="5dp"
                 android:layout_weight="1"
                 android:text="@string/PIDSetting"
                 android:textColor="@android:color/holo_red_light"
@@ -380,6 +426,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="@string/DataAnalysis"
+                android:layout_marginHorizontal="5dp"
                 android:textColor="@android:color/holo_red_light"
                 android:textSize="18sp"
                 android:textStyle="bold" />

@@ -617,7 +617,7 @@ public class MainSystem extends AppCompatActivity {
             }
         }
         else {
-            Toast.makeText ( getApplicationContext (),"Bluetooth is not connected, Please turn back!",Toast.LENGTH_LONG ).show ();
+            Toast.makeText ( getApplicationContext (),"计频蓝牙未连接!",Toast.LENGTH_LONG ).show ();
         }
 
 
@@ -627,18 +627,107 @@ public class MainSystem extends AppCompatActivity {
 
     public void setParameters(View view) {
 
-        //传感器温度值设置
-        int temp;
-        temp = Integer.parseInt ( sawTempSet.getText ().toString () );
-        if (temp<200 && temp>0)
-        {
-            sendFreqMessage ( temp );
-            sendFreqMessage ( 1 );
+        if (socketFreq.isConnected ()) {
+            //传感器温度值设置
+            int temp;
+            if(sawTempSet.getText () !=null)
+            {
+                temp = Integer.parseInt ( sawTempSet.getText ().toString () );
+                if (temp < 200 && temp > 0) {
+                    sendFreqMessage ( temp );
+                    sendFreqMessage ( 1 );
+                } else {
+                    Toast.makeText ( getApplicationContext (), "传感器温度设置不合法!", Toast.LENGTH_SHORT ).show ();
+                }
+            }
+            else {
+                Toast.makeText ( getApplicationContext (), "请输入传感器目标温度", Toast.LENGTH_SHORT ).show ();
+            }
+
         }
-        else
-        {
-            Toast.makeText (getApplicationContext (),"传感器温度设置不合法!",Toast.LENGTH_LONG ).show ();
-            sawTempSet.setText ("30");
+        else {
+            Toast.makeText ( getApplicationContext (),"计频蓝牙未连接!",Toast.LENGTH_LONG ).show ();
+        }
+
+        if (socketTemp.isConnected ()) {
+            int temp;
+            if(inletTempSet.getText () !=null)
+             {
+                temp = Integer.parseInt ( inletTempSet.getText ().toString () );
+                if (temp < 200 && temp > 0) {
+                    sendTempMessage ( temp );
+                    sendTempMessage ( 2 );
+                } else {
+                    Toast.makeText ( getApplicationContext (), "进口温度设置不合法!", Toast.LENGTH_SHORT ).show ();
+            }
+            }
+             else {
+                Toast.makeText ( getApplicationContext (), "请输入进口目标温度", Toast.LENGTH_SHORT ).show ();
+            }
+
+            if(valveTempSet.getText () !=null)
+            {
+                temp = Integer.parseInt ( valveTempSet.getText ().toString () );
+                if (temp < 200 && temp > 0) {
+                    sendTempMessage ( temp );
+                    sendTempMessage ( 3 );
+                } else {
+                    Toast.makeText ( getApplicationContext (), "阀体温度设置不合法!", Toast.LENGTH_SHORT ).show ();
+                }
+            }
+            else {
+                Toast.makeText ( getApplicationContext (), "请输入阀体目标温度", Toast.LENGTH_SHORT ).show ();
+            }
+
+            if(outletTempSet.getText () !=null)
+            {
+                temp = Integer.parseInt ( outletTempSet.getText ().toString () );
+                if (temp < 200 && temp > 0) {
+                    sendTempMessage ( temp );
+                    sendTempMessage ( 4 );
+                } else {
+                    Toast.makeText ( getApplicationContext (), "喷口温度设置不合法!", Toast.LENGTH_SHORT ).show ();
+                }
+            }
+            else {
+                Toast.makeText ( getApplicationContext (), "请输入喷口目标温度", Toast.LENGTH_SHORT ).show ();
+            }
+
+            if(columnTempSet.getText () !=null)
+            {
+                temp = Integer.parseInt ( columnTempSet.getText ().toString () );
+                if (temp < 200 && temp > 0) {
+                    sendTempMessage ( temp );
+                    sendTempMessage ( 1 );
+                } else {
+                    Toast.makeText ( getApplicationContext (), "毛细管温度设置不合法!", Toast.LENGTH_SHORT ).show ();
+                }
+            }
+            else {
+                Toast.makeText ( getApplicationContext (), "请输入毛细管目标温度", Toast.LENGTH_SHORT ).show ();
+            }
+
+            if(volumeSet.getText () !=null)
+            {
+                temp = Integer.parseInt ( volumeSet.getText ().toString () );
+
+                temp = temp*200;
+                int v2 = temp%256;
+                int v1 = temp/256;
+
+                sendTempMessage ( 0x29 );
+                sendTempMessage ( v1 );
+                sendTempMessage ( v2 );
+            }
+            else {
+                Toast.makeText ( getApplicationContext (), "请输入毛细管目标温度", Toast.LENGTH_SHORT ).show ();
+            }
+
+
+
+        }
+        else {
+            Toast.makeText ( getApplicationContext (),"温控蓝牙未连接!",Toast.LENGTH_LONG ).show ();
         }
 
     }

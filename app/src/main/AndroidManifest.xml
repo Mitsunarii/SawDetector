@@ -18,16 +18,17 @@
 
     <application
         android:allowBackup="true"
-        android:theme="@style/Theme.AppCompat.NoActionBar">
+        android:theme="@style/Theme.AppCompat.NoActionBar"
+        android:icon="@drawable/app_icon">
         <activity
             android:name=".BluetoothLogin">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainSystem">
+        <activity android:name=".MainSystem"
+            android:launchMode="singleTask">
 
         </activity>
     </application>
