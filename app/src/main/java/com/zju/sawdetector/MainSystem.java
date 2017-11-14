@@ -3,6 +3,7 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
@@ -16,6 +17,7 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,13 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
-
-
-
 
 
 public class MainSystem extends AppCompatActivity {
@@ -79,11 +76,13 @@ public class MainSystem extends AppCompatActivity {
 
 
     Button mStartFrequency;
+    Switch mSawTempWork;
+    Switch mSawTempMode;
+
 
 
     public static final int updateSawTemp = 1;
     public static final int updateSawFreq =2;
-    public static final int updateSystemTemp = 3;
 
     //画图
     LinearLayout mFreqChart;
@@ -126,9 +125,6 @@ public class MainSystem extends AppCompatActivity {
                 case updateSawFreq:
                      mFreqService.updateChart (freqTime,sawFreq);
                      mFreqDiffService.updateChart ( freqTime,sawDiff);
-                case updateSystemTemp:
-
-
                     break;
                 default:
                     break;
@@ -143,6 +139,8 @@ public class MainSystem extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main_system);
+
+
 
 
         mFreqChart = (LinearLayout)findViewById(R.id.frequency_curve);
@@ -184,6 +182,12 @@ public class MainSystem extends AppCompatActivity {
 
 
         mStartFrequency = (Button ) findViewById ( R.id.button_startFrequency );
+        mSawTempWork = (Switch ) findViewById ( R.id.switch_sawTempWork );
+        mSawTempMode = (Switch ) findViewById ( R.id.switch_sawTempMode );
+
+
+
+
 
 
         updateFreq.start ();
@@ -564,6 +568,8 @@ public class MainSystem extends AppCompatActivity {
 
     };
 
+
+//Button 开始计频的onclick函数;
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void startFrequency(View view) {
         if (socketFreq.isConnected ()){
@@ -624,18 +630,18 @@ public class MainSystem extends AppCompatActivity {
 
     }
 
-
+//Button 系统参数设置的onclick函数;
     public void setParameters(View view) {
 
         if (socketFreq.isConnected ()) {
             //传感器温度值设置
             int temp;
-            if(sawTempSet.getText () !=null)
+           if(!Objects.equals ( sawTempSet.getText ().toString (), "" ))
             {
                 temp = Integer.parseInt ( sawTempSet.getText ().toString () );
                 if (temp < 200 && temp > 0) {
-                    sendFreqMessage ( temp );
                     sendFreqMessage ( 1 );
+                    sendFreqMessage ( temp );
                 } else {
                     Toast.makeText ( getApplicationContext (), "传感器温度设置不合法!", Toast.LENGTH_SHORT ).show ();
                 }
@@ -651,26 +657,26 @@ public class MainSystem extends AppCompatActivity {
 
         if (socketTemp.isConnected ()) {
             int temp;
-            if(inletTempSet.getText () !=null)
+            if(!Objects.equals ( inletTempSet.getText ().toString (), ""))
              {
                 temp = Integer.parseInt ( inletTempSet.getText ().toString () );
                 if (temp < 200 && temp > 0) {
-                    sendTempMessage ( temp );
                     sendTempMessage ( 2 );
+                    sendTempMessage ( temp );
                 } else {
                     Toast.makeText ( getApplicationContext (), "进口温度设置不合法!", Toast.LENGTH_SHORT ).show ();
+                }
             }
-            }
-             else {
+            else {
                 Toast.makeText ( getApplicationContext (), "请输入进口目标温度", Toast.LENGTH_SHORT ).show ();
             }
 
-            if(valveTempSet.getText () !=null)
+            if(!Objects.equals ( valveTempSet.getText ().toString (), ""))
             {
                 temp = Integer.parseInt ( valveTempSet.getText ().toString () );
                 if (temp < 200 && temp > 0) {
-                    sendTempMessage ( temp );
                     sendTempMessage ( 3 );
+                    sendTempMessage ( temp );
                 } else {
                     Toast.makeText ( getApplicationContext (), "阀体温度设置不合法!", Toast.LENGTH_SHORT ).show ();
                 }
@@ -679,12 +685,12 @@ public class MainSystem extends AppCompatActivity {
                 Toast.makeText ( getApplicationContext (), "请输入阀体目标温度", Toast.LENGTH_SHORT ).show ();
             }
 
-            if(outletTempSet.getText () !=null)
+            if(!Objects.equals ( outletTempSet.getText ().toString (), ""))
             {
                 temp = Integer.parseInt ( outletTempSet.getText ().toString () );
                 if (temp < 200 && temp > 0) {
-                    sendTempMessage ( temp );
                     sendTempMessage ( 4 );
+                    sendTempMessage ( temp );
                 } else {
                     Toast.makeText ( getApplicationContext (), "喷口温度设置不合法!", Toast.LENGTH_SHORT ).show ();
                 }
@@ -693,12 +699,12 @@ public class MainSystem extends AppCompatActivity {
                 Toast.makeText ( getApplicationContext (), "请输入喷口目标温度", Toast.LENGTH_SHORT ).show ();
             }
 
-            if(columnTempSet.getText () !=null)
+            if(!Objects.equals ( columnTempSet.getText ().toString (), ""))
             {
                 temp = Integer.parseInt ( columnTempSet.getText ().toString () );
                 if (temp < 200 && temp > 0) {
-                    sendTempMessage ( temp );
                     sendTempMessage ( 1 );
+                    sendTempMessage ( temp );
                 } else {
                     Toast.makeText ( getApplicationContext (), "毛细管温度设置不合法!", Toast.LENGTH_SHORT ).show ();
                 }
@@ -707,7 +713,7 @@ public class MainSystem extends AppCompatActivity {
                 Toast.makeText ( getApplicationContext (), "请输入毛细管目标温度", Toast.LENGTH_SHORT ).show ();
             }
 
-            if(volumeSet.getText () !=null)
+            if(!Objects.equals ( volumeSet.getText ().toString (), ""))
             {
                 temp = Integer.parseInt ( volumeSet.getText ().toString () );
 
@@ -730,6 +736,61 @@ public class MainSystem extends AppCompatActivity {
             Toast.makeText ( getApplicationContext (),"温控蓝牙未连接!",Toast.LENGTH_LONG ).show ();
         }
 
+    }
+
+
+    //Switch 温控片是否工作的onclick函数;
+    public void sawTempWork(View view) {
+        if (socketFreq.isConnected ())
+        {
+            if (mSawTempWork.isChecked ())
+            {
+                sendFreqMessage ( 0x06 );
+                sendFreqMessage ( 0 );
+
+            }
+            else{
+                sendFreqMessage ( 0x05 );
+                sendFreqMessage ( 0 );
+            }
+        }
+
+
+
+    }
+
+    //Switch 温控片工作模式的onclick函数;
+    public void sawTempMode(View view) {
+        if (socketFreq.isConnected ())
+        {
+            if (mSawTempMode.isChecked ())
+            {
+                sendFreqMessage ( 0x08 );
+                sendFreqMessage ( 0 );
+
+            }
+            else{
+                sendFreqMessage ( 0x07 );
+                sendFreqMessage ( 0 );
+            }
+        }
+
+
+    }
+
+
+    //进入数据分析界面
+    public void DataAnalysis(View view) {
+
+        Intent intent = new Intent(MainSystem.this,DataAnalysis.class);
+        startActivity(intent);
+
+    }
+
+    //进入流程设置界面
+    public void WorkflowSetting(View view) {
+        Intent intent = new Intent(MainSystem.this,WorkflowSetting.class);
+        startActivity(intent);
     }
 
 
