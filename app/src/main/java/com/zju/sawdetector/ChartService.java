@@ -89,20 +89,20 @@ public class ChartService {
         multipleSeriesRenderer.setYTitle(yTitle);
         multipleSeriesRenderer.setRange(new double[] { 0, maxX, 0, maxY });//xy轴的范围
         multipleSeriesRenderer.setLabelsColor(labelColor);
-        multipleSeriesRenderer.setXLabels(30);
-        multipleSeriesRenderer.setYLabels(30);
+        multipleSeriesRenderer.setXLabels(20);
+        multipleSeriesRenderer.setYLabels(20);
         multipleSeriesRenderer.setXLabelsAlign(Align.RIGHT);
         multipleSeriesRenderer.setYLabelsAlign(Align.RIGHT);
-        multipleSeriesRenderer.setAxisTitleTextSize(30);
+        multipleSeriesRenderer.setAxisTitleTextSize(20);
         multipleSeriesRenderer.setChartTitleTextSize(60);
-        multipleSeriesRenderer.setLabelsTextSize(30);
-        multipleSeriesRenderer.setLegendTextSize(30);
+        multipleSeriesRenderer.setLabelsTextSize(20);
+        multipleSeriesRenderer.setLegendTextSize(20);
         multipleSeriesRenderer.setPointSize(1f);//曲线描点尺寸
 
 
         multipleSeriesRenderer.setFitLegend(true);
 
-        multipleSeriesRenderer.setMargins(new int[] { 45, 160, 25, 70 });
+        multipleSeriesRenderer.setMargins(new int[] { 25, 160, 25, 50 });
         multipleSeriesRenderer.setShowGrid(true);
         multipleSeriesRenderer.setZoomEnabled(true, true);
         multipleSeriesRenderer.setPanEnabled(true);
@@ -115,7 +115,7 @@ public class ChartService {
         mRenderer.setColor(curveColor);
         mRenderer.setFillPoints ( false );
         mRenderer.setPointStyle(PointStyle.CIRCLE);//描点风格，可以为圆点，方形点等等
-        mRenderer.setLineWidth (4);
+        mRenderer.setLineWidth (3);
         multipleSeriesRenderer.setInScroll (true);
         //multipleSeriesRenderer.setClickEnabled ( true );
         multipleSeriesRenderer.addSeriesRenderer(mRenderer);

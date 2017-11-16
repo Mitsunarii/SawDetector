@@ -35,7 +35,7 @@ public class BluetoothLogin extends Activity {
 
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         setContentView(R.layout.bluetooth_login);
-        ListView deviceListView = findViewById(R.id.listView1);
+        ListView deviceListView = findViewById(R.id.listViewBT);
         mDeviceNames = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         deviceListView.setAdapter(mDeviceNames);
 
@@ -49,19 +49,19 @@ public class BluetoothLogin extends Activity {
                 BluetoothDevice device = mDevices.get(position);
                 if (!mIsPairedList) {
                     if (device.createBond()) {
-                        Toast.makeText(getApplicationContext(), "Bluetooth device is paired.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "蓝牙已配对", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(getApplicationContext(), "Failed to pair the bluetooth device.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "配对失败", Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     if (SystemConfig.getFrequencyDetector() == null) {
                         SystemConfig.setFrequencyDetector(device);
-                        Toast.makeText(getApplicationContext(), "FrequencyDetector is selected", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "计频蓝牙已选择", Toast.LENGTH_SHORT).show();
                     }
 
                     else {
                         SystemConfig.setTemperatureController(device);
-                        Toast.makeText(getApplicationContext(), "TemperatureController is selected", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "温控蓝牙已选择", Toast.LENGTH_SHORT).show();
 
                     }
                 }
@@ -75,11 +75,11 @@ public class BluetoothLogin extends Activity {
         if (!mAdapter.isEnabled()) {
             Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(turnOn, 0);
-            Toast.makeText(getApplicationContext(),"Turned on"
-                    ,Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(),"开启蓝牙"
+                    ,Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(getApplicationContext(),"Already on",
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(),"当前蓝牙已开启",
+                    Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -124,16 +124,16 @@ public class BluetoothLogin extends Activity {
 
             registerReceiver(mReceiver, filter);
         }
-        Toast.makeText(getApplicationContext(),"Discovering Bluetooth Devices",
-                Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(),"蓝牙设备扫描中",
+                Toast.LENGTH_SHORT).show();
     }
 
     public void cancelDiscovery(View view) {
         mAdapter.cancelDiscovery();
         unregisterReceiver(mReceiver);
         mReceiver = null;
-        Toast.makeText(getApplicationContext(),"Discovery has been canceled",
-            Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(),"扫描已取消",
+            Toast.LENGTH_SHORT).show();
     }
 
     public void enterSystem(View view) {

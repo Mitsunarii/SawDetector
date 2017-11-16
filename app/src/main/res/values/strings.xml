@@ -34,6 +34,7 @@
     <string name="sawTempWork">温控片工作</string>
     <string name="sawTempMode">工作模式</string>
     <string name="sawDetector">快速气相色谱检测系统</string>
+    <string name="WorkflowSetting">流程设置</string>
 
 
 </resources>
