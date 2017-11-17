@@ -3,11 +3,16 @@ package com.zju.sawdetector;
 
         import android.content.Context;
         import android.os.Environment;
+        import android.util.Log;
 
+        import java.io.BufferedWriter;
         import java.io.ByteArrayOutputStream;
         import java.io.File;
         import java.io.FileInputStream;
         import java.io.FileOutputStream;
+        import java.io.IOException;
+        import java.io.OutputStreamWriter;
+        import java.nio.Buffer;
 
 /**
  * Created by Administrator on 2016/11/30.
@@ -46,6 +51,7 @@ public class FileService {
         fileOutputStream.write(fileText.getBytes());
         fileOutputStream.close();
 
+
     }
 
     /**将文件存放在SDCard
@@ -61,9 +67,29 @@ public class FileService {
 
     public void saveToSDCard(String fileName, String fileText) throws Exception{
         //第一个参数方法为获取SDCard目录
-        File file = new File(Environment.getExternalStorageDirectory(),fileName);
+        File path = new File ( Environment.getExternalStorageDirectory () + "/Android"+"/data"+"/com.zju.sawdetector"+File.separator);
+
+        if (!path.exists ())
+        {
+            // Make sure the Pictures directory exists.
+            path.mkdirs();
+        }
+
+        File file = new File(path,fileName);
+        Log.d ( "saveToSDCard", String.valueOf ( file ) );
+
+        if (!file.exists ())
+        {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         FileOutputStream outputStream = new FileOutputStream(file);
-        outputStream.write(fileText.getBytes());
+        BufferedWriter writer = new BufferedWriter ( new OutputStreamWriter ( outputStream ));
+        writer.write (fileText);
+        writer.close ();
         outputStream.close();
     }
 
@@ -72,6 +98,7 @@ public class FileService {
         //默认读取路径../data/date/package name/file目录下
         FileInputStream fileInputStream = context.openFileInput(fileName);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
         byte[] buffer = new byte[1024];
         int len = 0;
         while ((len = fileInputStream.read(buffer)) != -1){

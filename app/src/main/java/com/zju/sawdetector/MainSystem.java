@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -90,7 +92,9 @@ public class MainSystem extends AppCompatActivity {
 
 
     //频率数据保存
-    FileService FreqSave;
+    FileOutputStream FreqSave;
+    BufferedWriter FreqSaveWriter;
+
 
 
     public static final int updateSawTemp = 1;
@@ -193,7 +197,7 @@ public class MainSystem extends AppCompatActivity {
         mSaveData = ( CheckBox ) findViewById ( R.id.checkbox_DataSave );
         mAutoMode = ( CheckBox ) findViewById ( R.id.checkbox_AutoMode );
 
-        FreqSave = new FileService ( MainSystem.this );
+        //FreqSave = new FileService ( MainSystem.this );
 
 
         updateFreq.start ();
@@ -239,6 +243,7 @@ public class MainSystem extends AppCompatActivity {
 
     //计频蓝牙的连接与数据传输
     Thread threadFreq = new Thread () {
+        @SuppressLint("DefaultLocale")
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void run() {
@@ -374,19 +379,13 @@ public class MainSystem extends AppCompatActivity {
 
 
                     if (mSaveData.isChecked ()) {
-                        try {
-                            //判断SDCard是否存在并且可写
-                            if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
-                                FreqSave.saveToSDCard("Test.txt",String.valueOf ( sawFreq ));
-                                Toast.makeText(MainSystem.this,"保存成功",Toast.LENGTH_LONG).show();
-                            }else {
-                                Toast.makeText(MainSystem.this,"SDCard不存在或不可写",Toast.LENGTH_LONG).show();
-                            }
-                        } catch (Exception e) {
-                            Toast.makeText(MainSystem.this,"保存失败",Toast.LENGTH_LONG).show();
-                            e.printStackTrace();
-                        }
 
+                        try {
+                            FreqSaveWriter.write ( "Time： " +String.format ( "%.2f", freqTime )+" Frequency: "+String.format ( "%.2f", sawFreq )+"\n"
+                            );
+                        } catch (IOException e) {
+                            e.printStackTrace ();
+                        }
 
                     }
 
@@ -574,6 +573,7 @@ public class MainSystem extends AppCompatActivity {
 
 
     //Button 开始计频的onclick函数;
+    @SuppressLint("SimpleDateFormat")
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void startFrequency(View view) {
         if (socketFreq.isConnected ()) {
@@ -587,6 +587,8 @@ public class MainSystem extends AppCompatActivity {
                 sendFreqMessage ( 0xAA );
                 mStartFrequency.setText ( "停止检测" );
                 freqBeginTime = System.currentTimeMillis ();
+
+
 
 
                 mFreqChart.removeAllViews ();
@@ -609,18 +611,40 @@ public class MainSystem extends AppCompatActivity {
                 mFreqDiffChart.addView ( FreqDiffChartView, new LinearLayout.LayoutParams
                         ( LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT ) );
 
-               /* if (mSaveData.isChecked ())
+                if (mSaveData.isChecked ())
                 {
                     try {
 
-                        Log.d ( "MainSystem", "startFrequency: DataSave" );
-                        FreqSave =  new FileOutputStream ( String.valueOf ( freqBeginTime ));
-                        Log.d ( "MainSystem", "startFrequency: DataSave is done" );
-                        //FreqSaveWriter = new BufferedWriter ( new OutputStreamWriter ( FreqSave ) );
+                        SimpleDateFormat sDateFormat;
+                        sDateFormat = new SimpleDateFormat ("yyyy-MM-dd    hh:mm:ss");
+                        String DateTitle = sDateFormat.format(new java.util.Date());
+
+                        File path = new File ( Environment.getExternalStorageDirectory () + "/Android"+"/data"+"/com.zju.sawdetector"+File.separator);
+                        if (!path.exists ())
+                        {
+                            path.mkdirs();
+                        }
+                        File file = new File(path,DateTitle+".txt");
+                       // Log.d ( "saveToSDCard", String.valueOf ( file ) );
+                       // Log.d ( "saveToSDCard", String.valueOf ( file.exists () ) );
+                        if (!file.exists ())
+                        {
+                            try {
+                                Boolean Tag = file.createNewFile();
+                                Log.d ( "saveToSDCard", String.valueOf ( Tag ) );
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        FreqSave =  new FileOutputStream(file);
+                        FreqSaveWriter = new BufferedWriter ( new OutputStreamWriter ( FreqSave ) );
+
+
                     } catch (FileNotFoundException e) {
                         e.printStackTrace ();
                     }
-                }*/
+                }
 
             } else if (mStartFrequency.getText ().toString ().equals ( "停止检测" )) {
 
@@ -635,14 +659,14 @@ public class MainSystem extends AppCompatActivity {
                 mFreqDiffService.multipleSeriesRenderer.setRange ( new double[]{0, freqTime, 0, mFreqDiffService.mSeries.getMaxY ()} );
                 mFreqDiffService.mGraphicalView.repaint ();
 
-              /*  if (mSaveData.isChecked ()) {
+                if (mSaveData.isChecked ()) {
                     try {
-                       // FreqSaveWriter.close ();
+                        FreqSaveWriter.close ();
                         FreqSave.close ();
                     } catch (IOException e) {
                         e.printStackTrace ();
                     }
-                }*/
+                }
 
 
             }
