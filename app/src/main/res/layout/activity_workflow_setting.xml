@@ -34,93 +34,111 @@
 
             <Button
                 android:id="@+id/button_Pump"
+                android:tag="pump"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="抽气"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:onClick="onWorkflowButtonClick" />
 
             <Button
-                android:id="@+id/button_Injection"
+                android:id="@+id/button_Inject"
+                android:tag="inject"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="注射"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:onClick="onWorkflowButtonClick" />
 
             <Button
-                android:id="@+id/button_Sampling"
+                android:id="@+id/button_Sample"
+                android:tag="sample"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="样品"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:onClick="onWorkflowButtonClick" />
 
             <Button
                 android:id="@+id/button_Wait"
+                android:tag="wait"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="等待"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:onClick="onWorkflowButtonClick" />
 
             <Button
                 android:id="@+id/button_Flash"
+                android:tag="flash"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="闪蒸"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:onClick="onWorkflowButtonClick" />
 
             <Button
-                android:id="@+id/button_Heating"
+                android:id="@+id/button_Heat"
+                android:tag="heat"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="升温"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:onClick="onWorkflowButtonClick" />
 
             <Button
                 android:id="@+id/button_Data"
+                android:tag="data"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="数据"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:onClick="onWorkflowButtonClick" />
 
             <Button
                 android:id="@+id/button_Bake"
+                android:tag="bake"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="传感器加热"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:onClick="onWorkflowButtonClick" />
 
             <Button
                 android:id="@+id/button_Fan"
+                android:tag="fan"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="风扇"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:onClick="onWorkflowButtonClick" />
 
         </LinearLayout>
 
@@ -161,7 +179,8 @@
             android:text="新建"
             android:textColor="@android:color/holo_red_light"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            />
 
         <Button
             android:id="@+id/button_Save"
