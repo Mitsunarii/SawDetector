@@ -122,7 +122,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="传感器加热"
+                android:text="清洁"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -169,6 +169,17 @@
         android:layout_margin="10dp"
         android:orientation="horizontal">
 
+        <Button
+            android:id="@+id/button_Quit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+            android:layout_weight="1"
+            android:text="当前流程"
+            android:textColor="@android:color/holo_red_light"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:onClick="WorkFlowPresent"/>
 
         <Button
             android:id="@+id/button_NewFile"
@@ -180,7 +191,7 @@
             android:textColor="@android:color/holo_red_light"
             android:textSize="24sp"
             android:textStyle="bold"
-            />
+            android:onClick="NewFile" />
 
         <Button
             android:id="@+id/button_Save"
@@ -191,18 +202,10 @@
             android:text="保存"
             android:textColor="@android:color/holo_red_light"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:onClick="WorkFlowSave"/>
 
-        <Button
-            android:id="@+id/button_Quit"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="5dp"
-            android:layout_weight="1"
-            android:text="退出"
-            android:textColor="@android:color/holo_red_light"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+
 
 
     </LinearLayout>

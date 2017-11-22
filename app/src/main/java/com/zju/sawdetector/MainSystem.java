@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Environment;
@@ -576,6 +577,7 @@ public class MainSystem extends AppCompatActivity {
     @SuppressLint("SimpleDateFormat")
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void startFrequency(View view) {
+
         if (socketFreq.isConnected ()) {
             if (mStartFrequency.getText ().toString ().equals ( "开始检测" )) {
 

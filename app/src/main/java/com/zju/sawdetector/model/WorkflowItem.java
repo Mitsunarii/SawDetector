@@ -52,6 +52,11 @@ public class WorkflowItem {
 	}
 
 	private CharSequence label;
+
+	private int value1 = 0;
+	private int value2 = 0;
+
+
 	private Type type;
 
 	public CharSequence getLabel() {
@@ -61,6 +66,25 @@ public class WorkflowItem {
 	public void setLabel(CharSequence label) {
 		this.label = label;
 	}
+
+
+	public int getValue2() {
+		return value2;
+	}
+
+	public void setValue2(int value) {
+		this.value2 = value;
+	}
+
+
+	public int getValue1() {
+		return value1;
+	}
+
+	public void setValue1(int value) {
+		this.value1 = value;
+	}
+
 
 	public Type getType() {
 		return type;
