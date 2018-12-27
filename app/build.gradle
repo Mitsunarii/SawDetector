@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion '26.0.3'
+    buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "com.zju.sawdetector"
         minSdkVersion 21
@@ -25,10 +25,10 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     testCompile 'org.testng:testng:6.9.6'
-    compile 'com.android.support:appcompat-v7:26.1.0'
-    compile 'com.android.support.constraint:constraint-layout:2.0.0-alpha3'
+    compile 'com.android.support:appcompat-v7:26.+'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.inuker.bluetooth:library:1.4.0'
-    compile 'com.android.support:support-v4:26.1.0'
+    compile 'com.android.support:support-v4:26.+'
     testCompile 'org.testng:testng:6.9.6'
     implementation files('libs/achartengine-1.2.0.jar')
     compile files('libs/achartengine-1.2.0.jar')
