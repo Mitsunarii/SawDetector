@@ -1,7 +1,7 @@
 package com.zju.sawdetector;
 
-import android.annotation.SuppressLint;
-import android.content.ClipData;
+
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -141,9 +141,13 @@ public class WorkflowSetting extends AppCompatActivity {
 				return view;
 			}
 		};
+
 		workflowView = (ListView) findViewById(R.id.listViewWorkflow);
 		workflowView.setAdapter(workflow);
 	}
+
+
+
 
 	public void onWorkflowButtonClick(View view) {
 		Button button = (Button) view;
@@ -185,11 +189,15 @@ public class WorkflowSetting extends AppCompatActivity {
 
 		Toast.makeText(getApplicationContext(), "流程设置已保存", Toast.LENGTH_SHORT).show();
 
+		Intent intent = new Intent(WorkflowSetting.this,MainSystem.class);
+		startActivity(intent);
+
 
 	}
 
 	public void WorkFlowPresent(View view)
 	{
+		workflow.clear();
 
 		SharedPreferences WorkflowTag = getSharedPreferences("Workflow",MODE_PRIVATE);
 		int num = WorkflowTag.getInt("Tag",0);

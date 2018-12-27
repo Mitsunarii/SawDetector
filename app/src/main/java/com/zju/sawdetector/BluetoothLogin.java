@@ -141,7 +141,7 @@ public class BluetoothLogin extends Activity {
         {
             return;
         }
-        Intent intent = new Intent(BluetoothLogin.this,MainSystem.class);
+        Intent intent = new Intent(BluetoothLogin.this,WorkflowSetting.class);
         startActivity(intent);
 
     }

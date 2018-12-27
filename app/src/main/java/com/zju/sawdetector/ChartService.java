@@ -135,7 +135,13 @@ public class ChartService {
     public void updateChart(double x, double y) {
         mSeries.add(x, y);
 
-        mGraphicalView.repaint ();//此处也可以调用invalidate()
+       // mGraphicalView.repaint ();//此处也可以调用invalidate()
+    }
+
+    public void repaint( ) {
+       // mSeries.add(x, y);
+
+         mGraphicalView.invalidate ();//此处也可以调用invalidate()
     }
 
 
@@ -158,10 +164,9 @@ public class ChartService {
 
         double DiffY = 0;
 
-        if (ItemCount >10) {
+        if (ItemCount >4) {
 
-            DiffY = mSeries.getY ( ItemCount - 1 )+mSeries.getY ( ItemCount - 2 )-mSeries.getY ( ItemCount - 3 )
-                    -mSeries.getY ( ItemCount - 4 );
+            DiffY = mSeries.getY ( ItemCount - 1 ) -mSeries.getY ( ItemCount - 4 );
         }
         return DiffY;
 

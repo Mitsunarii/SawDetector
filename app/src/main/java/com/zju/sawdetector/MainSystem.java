@@ -1,6 +1,5 @@
 package com.zju.sawdetector;
 import android.annotation.SuppressLint;
-import android.app.Service;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
@@ -61,6 +60,7 @@ public class MainSystem extends AppCompatActivity {
 
 
     //SAW传感器频率读取
+    boolean threadFreqInterrupt = false;
     boolean freqCheckTag = false;
     int readFreqTag = 0;
     boolean readFreqFinishTag = false;
@@ -73,8 +73,14 @@ public class MainSystem extends AppCompatActivity {
     private long freqBeginTime;
     private double freqTime;
 
+    int freqShowRatio;
+    int tempShowRatio;
+
+
+
 
     //温控板温度读取
+    boolean threadTempInterrupt = false;
     int TempTag;
     int Temp1, Temp2, Temp3, Temp4, Temp5, Temp6, Temp7, Temp8, Temp9, Temp10;
     double inletTemp, columnTemp, outletTemp, valveTemp, volume;
@@ -83,6 +89,7 @@ public class MainSystem extends AppCompatActivity {
     private TextView columnTempShow;
     private TextView valveTempShow;
     private TextView volumeShow;
+
 
 
     Button mStartFrequency;
@@ -100,6 +107,10 @@ public class MainSystem extends AppCompatActivity {
 
     public static final int updateSawTemp = 1;
     public static final int updateSawFreq = 2;
+    public static final int updatePaint = 3;
+    public static final int clearPaint = 4;
+    public static final int systemStatusChanged = 5;
+
 
     //画图
     LinearLayout mFreqChart;
@@ -122,6 +133,11 @@ public class MainSystem extends AppCompatActivity {
     private EditText valveTempSet;
     private EditText volumeSet;
 
+    //自动运行
+	private int autoTag = 0;
+    private TextView systemStatus;
+    public String itemName;
+
 
     @SuppressLint("HandlerLeak")
     private Handler handler = new Handler () {
@@ -130,17 +146,49 @@ public class MainSystem extends AppCompatActivity {
 
             switch (msg.what) {
                 case updateSawTemp:
-                    sawTempShow.setText ( String.format ( "%.2f", sawTemp ) + "℃" );
-                    inletTempShow.setText ( String.format ( "%.2f", inletTemp ) + "℃" );
-                    outletTempShow.setText ( String.format ( "%.2f", outletTemp ) + "℃" );
-                    valveTempShow.setText ( String.format ( "%.2f", valveTemp ) + "℃" );
-                    columnTempShow.setText ( String.format ( "%.2f", columnTemp ) + "℃" );
-                    volumeShow.setText ( String.format ( "%.2f", volume ) + "ml/min" );
+                    sawTempShow.setText ( String.format ( "%.2f", sawTemp ));
+                    inletTempShow.setText ( String.format ( "%.2f", inletTemp ));
+                    outletTempShow.setText ( String.format ( "%.2f", outletTemp ));
+                    valveTempShow.setText ( String.format ( "%.2f", valveTemp ));
+                    columnTempShow.setText ( String.format ( "%.2f", columnTemp ));
+                    volumeShow.setText ( String.format ( "%.3f", volume ));
                     break;
                 case updateSawFreq:
                     mFreqService.updateChart ( freqTime, sawFreq );
                     mFreqDiffService.updateChart ( freqTime, sawDiff );
                     break;
+                case clearPaint:
+                    mFreqChart.removeAllViews ();
+                    mFreqService.mSeries.clear ();
+                    mFreqService.mSeries.clearSeriesValues ();
+                    mFreqService.setXYMultipleSeriesDataset ( " " );
+                    mFreqService.setXYMultipleSeriesRenderer ( 10, 10, " ", "时间", "频率",
+                            Color.RED, Color.RED, Color.RED, Color.BLACK );
+                    FreqChartView = mFreqService.getGraphicalView ();
+                    mFreqChart.addView ( FreqChartView, new LinearLayout.LayoutParams
+                            ( LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT ) );
+
+                    mFreqDiffChart.removeAllViews ();
+                    mFreqDiffService.mSeries.clear ();
+                    mFreqService.mSeries.clearSeriesValues ();
+                    mFreqDiffService.setXYMultipleSeriesDataset ( " " );
+                    mFreqDiffService.setXYMultipleSeriesRenderer ( 10, 10, " ", "时间", "频率差分",
+                            Color.RED, Color.RED, Color.RED, Color.BLACK );
+                    FreqDiffChartView = mFreqDiffService.getGraphicalView ();
+                    mFreqDiffChart.addView ( FreqDiffChartView, new LinearLayout.LayoutParams
+                            ( LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT ) );
+
+                case updatePaint:
+                    mFreqService.multipleSeriesRenderer.setRange ( new double[]{0, freqTime, mFreqService.mSeries.getMinY (), mFreqService.mSeries.getMaxY ()} );
+                    mFreqService.repaint ();
+                    mFreqDiffService.multipleSeriesRenderer.setRange ( new double[]{0, freqTime, 0, mFreqDiffService.mSeries.getMaxY ()} );
+                    mFreqDiffService.repaint ();
+                    break;
+
+                case systemStatusChanged:
+                    systemStatus.setText ( "当前状态：" + itemName);
+
+
                 default:
                     break;
             }
@@ -155,7 +203,7 @@ public class MainSystem extends AppCompatActivity {
         setContentView ( R.layout.activity_main_system );
 
 
-        mFreqChart = ( LinearLayout ) findViewById ( R.id.frequency_curve );
+        mFreqChart = (LinearLayout) findViewById ( R.id.frequency_curve );
         mFreqService = new ChartService ( this );
         mFreqService.setXYMultipleSeriesDataset ( " " );
         mFreqService.setXYMultipleSeriesRenderer ( 20, 500000, "", "时间", "频率",
@@ -166,7 +214,7 @@ public class MainSystem extends AppCompatActivity {
         mFreqService.updateChart ( 0, 0 );
 
 
-        mFreqDiffChart = ( LinearLayout ) findViewById ( R.id.frequency_diff );
+        mFreqDiffChart = (LinearLayout) findViewById ( R.id.frequency_diff );
         mFreqDiffService = new ChartService ( this );
         mFreqDiffService.setXYMultipleSeriesDataset ( " " );
         mFreqDiffService.setXYMultipleSeriesRenderer ( 20, 10000, "", "时间", "频率差分",
@@ -177,40 +225,41 @@ public class MainSystem extends AppCompatActivity {
         mFreqDiffService.updateChart ( 0, 0 );
 
 
-        sawTempShow = ( TextView ) findViewById ( R.id.textViewSawTemp );
-        valveTempShow = ( TextView ) findViewById ( R.id.textViewValveTemp );
-        columnTempShow = ( TextView ) findViewById ( R.id.textViewColumnTemp );
-        outletTempShow = ( TextView ) findViewById ( R.id.textViewOutletTemp );
-        inletTempShow = ( TextView ) findViewById ( R.id.textViewInletTemp );
-        volumeShow = ( TextView ) findViewById ( R.id.textViewVolume );
+        sawTempShow = (TextView) findViewById ( R.id.textViewSawTemp );
+        valveTempShow = (TextView) findViewById ( R.id.textViewValveTemp );
+        columnTempShow = (TextView) findViewById ( R.id.textViewColumnTemp );
+        outletTempShow = (TextView) findViewById ( R.id.textViewOutletTemp );
+        inletTempShow = (TextView) findViewById ( R.id.textViewInletTemp );
+        volumeShow = (TextView) findViewById ( R.id.textViewVolume );
+        systemStatus = (TextView) findViewById ( R.id.systemStatus );
 
-        sawTempSet = ( EditText ) findViewById ( R.id.editTextSawTemp );
-        inletTempSet = ( EditText ) findViewById ( R.id.editTextInletTemp );
-        outletTempSet = ( EditText ) findViewById ( R.id.editTextOutletTemp );
-        columnTempSet = ( EditText ) findViewById ( R.id.editTextColumnTemp );
-        valveTempSet = ( EditText ) findViewById ( R.id.editTextValveTemp );
-        volumeSet = ( EditText ) findViewById ( R.id.editTextVolume );
+        sawTempSet = (EditText) findViewById ( R.id.editTextSawTemp );
+        inletTempSet = (EditText) findViewById ( R.id.editTextInletTemp );
+        outletTempSet = (EditText) findViewById ( R.id.editTextOutletTemp );
+        columnTempSet = (EditText) findViewById ( R.id.editTextColumnTemp );
+        valveTempSet = (EditText) findViewById ( R.id.editTextValveTemp );
+        volumeSet = (EditText) findViewById ( R.id.editTextVolume );
 
 
-        mStartFrequency = ( Button ) findViewById ( R.id.button_startFrequency );
-        mSawTempWork = ( Switch ) findViewById ( R.id.switch_sawTempWork );
-        mSawTempMode = ( Switch ) findViewById ( R.id.switch_sawTempMode );
-        mSaveData = ( CheckBox ) findViewById ( R.id.checkbox_DataSave );
-        mAutoMode = ( CheckBox ) findViewById ( R.id.checkbox_AutoMode );
+        mStartFrequency = (Button) findViewById ( R.id.button_startFrequency );
+        mSawTempWork = (Switch) findViewById ( R.id.switch_sawTempWork );
+        mSawTempMode = (Switch) findViewById ( R.id.switch_sawTempMode );
+        mSaveData = (CheckBox) findViewById ( R.id.checkbox_DataSave );
+        mAutoMode = (CheckBox) findViewById ( R.id.checkbox_AutoMode );
 
         //FreqSave = new FileService ( MainSystem.this );
 
 
-        updateFreq.start ();
+        //updateFreq.start ();
         threadFreq.start ();//读取FrequencyDetector蓝牙数据
         threadTemp.start ();//读取TemperatureController蓝牙数据
-
-
     }
 
 
+
+
     //频率数据的实时更新
-    Thread updateFreq = new Thread () {
+    /*Thread updateFreq = new Thread () {
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void run() {
@@ -233,13 +282,11 @@ public class MainSystem extends AppCompatActivity {
                     message.what = updateSawFreq;
                     handler.sendMessage ( message );
                 }
-
-
             }
         }
 
 
-    };
+    };*/
 
 
     //计频蓝牙的连接与数据传输
@@ -248,162 +295,187 @@ public class MainSystem extends AppCompatActivity {
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void run() {
-            BluetoothDevice freq = SystemConfig.getFrequencyDetector ();
-            //BluetoothDevice temp = SystemConfig.getTemperatureController();
 
-            UUID uuid = UUID.fromString ( "00001101-0000-1000-8000-00805F9B34FB" );
 
-            try {
-                socketFreq = freq.createRfcommSocketToServiceRecord ( uuid );
-            } catch (IOException e) {
-                e.printStackTrace ();
-                return;
-            }
 
-            try {
-                socketFreq.connect ();
-            } catch (IOException e) {
-                e.printStackTrace ();
-                return;
-            }
 
-            try {
-                mFreqOutput = socketFreq.getOutputStream ();
-            } catch (IOException e) {
-                e.printStackTrace ();
-            }
-
-            try {
-                mFreqInput = socketFreq.getInputStream ();
-            } catch (IOException e) {
-                e.printStackTrace ();
-            }
-
-            if (mFreqInput == null) {
-                return;
-            }
-
-            byte[] buffer = new byte[1];
-            int length;
-            for (; ; ) {
+                BluetoothDevice freq = SystemConfig.getFrequencyDetector();
+                //BluetoothDevice temp = SystemConfig.getTemperatureController();
+                UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
                 try {
-                    length = mFreqInput.read ( buffer );
+                    socketFreq = freq.createRfcommSocketToServiceRecord(uuid);
                 } catch (IOException e) {
-                    e.printStackTrace ();
-                    return;
-                }
-                if (length <= 0) {
+                    e.printStackTrace();
                     return;
                 }
 
-                int tempInt = (buffer[0] & 0xff);
-                if (tempInt == 0x9A && !freqCheckTag && readFreqTag == 0 && readTempTag == 0) {
-                    freqCheckTag = true;
-                } else if (tempInt == 0xA9 && freqCheckTag) {
-                    readFreqTag = 6;
-                    readFreqFinishTag = false;
-                    freqCheckTag = false;
-                } else if (tempInt == 0xAA && readTempTag == 0) {
-                    readTempTag = 2;
-                    readTempFinishTag = false;
-                } else {
 
-                    switch (readFreqTag) {
-                        case 6:
-                            sensor2 = tempInt;
-                            break;
-                        case 5:
-                            sensor1 = tempInt;
-                            break;
-                        case 4:
-                            sensor0 = tempInt;
-                            break;
-                        case 3:
-                            ref2 = tempInt;
-                            break;
-                        case 2:
-                            ref1 = tempInt;
-                            break;
-                        case 1:
-                            ref0 = tempInt;
-                            readFreqFinishTag = true;
-                            break;
-                        default:
-                            break;
-
-                    }
-
-                    readFreqTag--;
-                    if (readFreqTag < 0)
-                        readFreqTag = 0;
-
-                    switch (readTempTag) {
-                        case 2:
-                            tempHigh = tempInt;
-                            break;
-                        case 1:
-                            tempLow = tempInt;
-                            readTempFinishTag = true;
-                            break;
-                        default:
-                            break;
-                    }
-
-
-                    readTempTag--;
-                    if (readTempTag < 0)
-                        readTempTag = 0;
+                try {
+                    socketFreq.connect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return;
                 }
 
-                if (readTempFinishTag) {
-                    sawTemp = ((tempHigh << 8) + tempLow) * 0.0129 - 251.43;
-
-                    Message message = new Message ();
-                    message.what = updateSawTemp;
-                    handler.sendMessage ( message );
-                    readTempFinishTag = false;
+                try {
+                    mFreqOutput = socketFreq.getOutputStream();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
 
-                if (readFreqFinishTag) {
-                    sensor = (sensor2 << 16) + (sensor1 << 8) + sensor0;
-                    ref = (ref2 << 16) + (ref1 << 8) + ref0;
+                try {
+                    mFreqInput = socketFreq.getInputStream();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (mFreqInput == null) {
+                    return;
+                }
+
+                if (!threadFreqInterrupt) {
 
 
+                byte[] buffer = new byte[1];
+                int length;
+                for (; ; ) {
+                    try {
+                        length = mFreqInput.read(buffer);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return;
+                    }
+                    if (length <= 0) {
+                        return;
+                    }
 
-                    if (ref != 0) {
-                        sawFreq = (100000000 * (( double ) sensor)) / (( double ) ref);
+                    int tempInt = (buffer[0] & 0xff);
+                    if (tempInt == 0x9A && !freqCheckTag && readFreqTag == 0 && readTempTag == 0) {
+                        freqCheckTag = true;
+                    } else if (tempInt == 0xA9 && freqCheckTag) {
+                        readFreqTag = 6;
+                        readFreqFinishTag = false;
+                        freqCheckTag = false;
+                    } else if (tempInt == 0xAA && readTempTag == 0) {
+                        readTempTag = 2;
+                        readTempFinishTag = false;
                     } else {
-                        sawFreq = 0;
-                    }
 
-                    freqTime = ( double ) (System.currentTimeMillis () - freqBeginTime) / 1000;
+                        switch (readFreqTag) {
+                            case 6:
+                                sensor2 = tempInt;
+                                break;
+                            case 5:
+                                sensor1 = tempInt;
+                                break;
+                            case 4:
+                                sensor0 = tempInt;
+                                break;
+                            case 3:
+                                ref2 = tempInt;
+                                break;
+                            case 2:
+                                ref1 = tempInt;
+                                break;
+                            case 1:
+                                ref0 = tempInt;
+                                readFreqFinishTag = true;
+                                break;
+                            default:
+                                break;
 
-
-                    if (mSaveData.isChecked ()) {
-
-                        try {
-                            FreqSaveWriter.write ( "Time： " +String.format ( "%.2f", freqTime )+" Frequency: "+String.format ( "%.2f", sawFreq )+"\n"
-                            );
-                        } catch (IOException e) {
-                            e.printStackTrace ();
                         }
 
+                        readFreqTag--;
+                        if (readFreqTag < 0)
+                            readFreqTag = 0;
+
+                        switch (readTempTag) {
+                            case 2:
+                                tempHigh = tempInt;
+                                break;
+                            case 1:
+                                tempLow = tempInt;
+                                readTempFinishTag = true;
+                                break;
+                            default:
+                                break;
+                        }
+
+
+                        readTempTag--;
+                        if (readTempTag < 0)
+                            readTempTag = 0;
                     }
 
-                    readFreqFinishTag = false;
+                    if (readTempFinishTag) {
+                        sawTemp = ((tempHigh << 8) + tempLow) * 0.0129 - 251.43;
+
+                        if(tempShowRatio ==1000)
+                        {
+                            Message message = new Message();
+                            message.what = updateSawTemp;
+                            handler.sendMessage(message);
+                            tempShowRatio = 0;
+                        }
+                        tempShowRatio ++;
+                        readTempFinishTag = false;
+                    }
+
+                    if (readFreqFinishTag) {
+                        sensor = (sensor2 << 16) + (sensor1 << 8) + sensor0;
+                        ref = (ref2 << 16) + (ref1 << 8) + ref0;
 
 
+                        if (ref != 0) {
+                            sawFreq = (25000000 * ((double) sensor)) / ((double) ref);
+                        } else {
+                            sawFreq = 0;
+                        }
+                        System.out.print(sawFreq);
+
+                        freqTime = (double) (System.currentTimeMillis() - freqBeginTime) / 1000;
+
+
+                        if (mSaveData.isChecked()) {
+
+                            try {
+                                FreqSaveWriter.write("Time： " + String.format("%.2f", freqTime) + " Frequency: " + String.format("%.2f", sawFreq) + "\n"
+                                );
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+
+
+
+                        if(freqShowRatio ==6)
+                        {
+                            sawDiff = mFreqService.calculateDiff();
+                            Message message = new Message();
+                            message.what = updateSawFreq;
+                            handler.sendMessage(message);
+                            freqShowRatio = 0;
+                        }
+
+
+                        freqShowRatio++;
+
+                        readFreqFinishTag = false;
+
+                    }
 
 
                 }
-
-
-            }
-
+                }
 
         }
 
     };
+
+
+
 
 
     //温控蓝牙的连接与数据传输
@@ -412,159 +484,156 @@ public class MainSystem extends AppCompatActivity {
         @Override
         public void run() {
             //BluetoothDevice freq = SystemConfig.getFrequencyDetector ();
-            BluetoothDevice temp = SystemConfig.getTemperatureController ();
 
-            UUID uuid = UUID.fromString ( "00001101-0000-1000-8000-00805F9B34FB" );
+                BluetoothDevice temp = SystemConfig.getTemperatureController();
 
-            try {
-                socketTemp = temp.createRfcommSocketToServiceRecord ( uuid );
-            } catch (IOException e) {
-                e.printStackTrace ();
-                return;
-            }
+                UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-            try {
-                socketTemp.connect ();
-            } catch (IOException e) {
-                e.printStackTrace ();
-                return;
-            }
-
-            try {
-                mTempOutput = socketTemp.getOutputStream ();
-            } catch (IOException e) {
-                e.printStackTrace ();
-            }
-
-            try {
-                mTempInput = socketTemp.getInputStream ();
-            } catch (IOException e) {
-                e.printStackTrace ();
-            }
-
-            if (mTempInput == null) {
-                return;
-            }
-
-            byte[] buffer = new byte[1];
-            int length;
-            for (; ; ) {
                 try {
-                    length = mTempInput.read ( buffer );
+                    socketTemp = temp.createRfcommSocketToServiceRecord(uuid);
                 } catch (IOException e) {
-                    e.printStackTrace ();
+                    e.printStackTrace();
                     return;
                 }
-                if (length <= 0) {
+
+                try {
+                    socketTemp.connect();
+                } catch (IOException e) {
+                    e.printStackTrace();
                     return;
                 }
-                int tempInt = (buffer[0] & 0xff);
-                //System.out.println ( tempInt  );
 
-                if (TempTag == 0)
-                    switch (tempInt) {
-                        case 0xAA:
-                            TempTag = 15;
-                            break;
-                        case 0xAB:
-                            TempTag = 12;
-                            break;
-                        case 0xAC:
-                            TempTag = 9;
-                            break;
-                        case 0xAD:
-                            TempTag = 6;
-                            break;
-                        case 0xAE:
-                            TempTag = 3;
-                            break;
-
-                        default:
-                            TempTag = 0;
-                            break;
-                    }
-                else {
-                    switch (TempTag) {
-                        case 15:
-                            Temp1 = tempInt;
-                            TempTag--;
-                            break;
-                        case 14:
-                            Temp2 = tempInt;
-                            TempTag--;
-                            break;
-                        case 13:
-                            outletTemp = ((Temp1 << 8) + Temp2) * 0.0129 - 251.43;
-                            TempTag = 0;
-                            //System.out.println ( outletTemp );
-                            break;
-                        case 12:
-                            Temp3 = tempInt;
-                            TempTag--;
-                            break;
-                        case 11:
-                            Temp4 = tempInt;
-                            TempTag--;
-                            break;
-                        case 10:
-                            inletTemp = ((Temp3 << 8) + Temp4) * 0.0129 - 251.43;
-                            TempTag = 0;
-                            //System.out.println ( inletTemp );
-                            break;
-                        case 9:
-                            Temp5 = tempInt;
-                            TempTag--;
-                            break;
-                        case 8:
-                            Temp6 = tempInt;
-                            TempTag--;
-                            break;
-                        case 7:
-                            valveTemp = ((Temp5 << 8) + Temp6) * 0.0129 - 251.43;
-                            TempTag = 0;
-                            //System.out.println ( valveTemp );
-                            break;
-                        case 6:
-                            Temp7 = tempInt;
-                            TempTag--;
-                            break;
-                        case 5:
-                            Temp8 = tempInt;
-                            TempTag--;
-                            break;
-                        case 4:
-                            columnTemp = ((Temp7 << 8) + Temp8) * 0.0129 - 251.43;
-                            TempTag = 0;
-                            //System.out.println ( columnTemp );
-                            break;
-                        case 3:
-                            Temp9 = tempInt;
-                            TempTag--;
-                            break;
-                        case 2:
-                            Temp10 = tempInt;
-                            TempTag--;
-                            break;
-                        case 1:
-                            volume = ((Temp9 << 8) + Temp10) / 1000;
-                            TempTag = 0;
-                            // System.out.println ( volume );
-
-
-                            //   Message message = new Message ();
-                            //   message.what = updateSystemTemp;
-                            //  handler.sendMessage ( message );
-
-                            break;
-
-                        default:
-                            TempTag = 0;
-                            break;
-                    }
-
+                try {
+                    mTempOutput = socketTemp.getOutputStream();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
 
+                try {
+                    mTempInput = socketTemp.getInputStream();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
+                if (mTempInput == null) {
+                    return;
+                }
+
+                if(!threadTempInterrupt) {
+
+                byte[] buffer = new byte[1];
+                int length;
+                for (; ; ) {
+                    try {
+                        length = mTempInput.read(buffer);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return;
+                    }
+                    if (length <= 0) {
+                        return;
+                    }
+                    int tempInt = (buffer[0] & 0xff);
+                    //System.out.println ( tempInt  );
+
+                    if (TempTag == 0)
+                        switch (tempInt) {
+                            case 0xAA:
+                                TempTag = 15;
+                                break;
+                            case 0xAB:
+                                TempTag = 12;
+                                break;
+                            case 0xAC:
+                                TempTag = 9;
+                                break;
+                            case 0xAD:
+                                TempTag = 6;
+                                break;
+                            case 0xAE:
+                                TempTag = 3;
+                                break;
+
+                            default:
+                                TempTag = 0;
+                                break;
+                        }
+                    else {
+                        switch (TempTag) {
+                            case 15:
+                                Temp1 = tempInt;
+                                TempTag--;
+                                break;
+                            case 14:
+                                Temp2 = tempInt;
+                                TempTag--;
+                                break;
+                            case 13:
+                                outletTemp = ((Temp1 << 8) + Temp2) * 0.0129 - 251.43;
+                                TempTag = 0;
+                                //System.out.println ( outletTemp );
+                                break;
+                            case 12:
+                                Temp3 = tempInt;
+                                TempTag--;
+                                break;
+                            case 11:
+                                Temp4 = tempInt;
+                                TempTag--;
+                                break;
+                            case 10:
+                                inletTemp = ((Temp3 << 8) + Temp4) * 0.0129 - 251.43;
+                                TempTag = 0;
+                                //System.out.println ( inletTemp );
+                                break;
+                            case 9:
+                                Temp5 = tempInt;
+                                TempTag--;
+                                break;
+                            case 8:
+                                Temp6 = tempInt;
+                                TempTag--;
+                                break;
+                            case 7:
+                                valveTemp = ((Temp5 << 8) + Temp6) * 0.0129 - 251.43;
+                                TempTag = 0;
+                                //System.out.println ( valveTemp );
+                                break;
+                            case 6:
+                                Temp7 = tempInt;
+                                TempTag--;
+                                break;
+                            case 5:
+                                Temp8 = tempInt;
+                                TempTag--;
+                                break;
+                            case 4:
+                                columnTemp = ((Temp7 << 8) + Temp8) * 0.0129 - 251.43;
+                                TempTag = 0;
+                                //System.out.println ( columnTemp );
+                                break;
+                            case 3:
+                                Temp9 = tempInt;
+                                TempTag--;
+                                break;
+                            case 2:
+                                Temp10 = tempInt;
+                                TempTag--;
+                                break;
+                            case 1:
+                                volume = ((Temp9 << 16) + (Temp10 << 8) + tempInt) * 0.001;
+                                TempTag = 0;
+                                break;
+
+                            default:
+                                TempTag = 0;
+                                break;
+                        }
+
+                    }
+
+
+                }
             }
 
 
@@ -573,109 +642,179 @@ public class MainSystem extends AppCompatActivity {
     };
 
 
+    private void autoRun( ){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                if (mAutoMode.isChecked()) {
+
+                    for (int i = 0; i < autoTag; i++) {
+                        SharedPreferences WorkflowReader = getSharedPreferences("Workflow", MODE_PRIVATE);
+
+                        itemName = WorkflowReader.getString(String.valueOf(i * 3 + 1), "Error");
+                        int itemValue1 = WorkflowReader.getInt(String.valueOf(i * 3 + 2), 0);
+                        int itemValue2 = WorkflowReader.getInt(String.valueOf(i * 3 + 3), 0);
+
+
+                        Message message = new Message ();
+                        message.what = systemStatusChanged;
+                        handler.sendMessage ( message );
+
+                        switch (itemName) {
+                            case "抽气":
+                                sendTempMessage(0x27);
+                                sendTempMessage(0x01);
+
+                                 try {
+                                     Thread.sleep(itemValue1 * 1000);
+                                 } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                 }
+                                 sendTempMessage(0x27);
+                                 sendTempMessage(0x02);
+                                break;
+
+                            case "注射":
+                                sendTempMessage(0x09);
+                                sendTempMessage(0x0A);
+                                break;
+
+                            case "样品":
+                                sendTempMessage(0x09);
+                                sendTempMessage(0x0B);
+                                break;
+
+                            case "等待":
+                                try {
+                                    Thread.sleep(itemValue1 * 1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                break;
+
+                            case "闪蒸":
+                                itemValue1 = itemValue1 * 50;
+                                if (itemValue1 > 0 && itemValue1 < 255) {
+                                    sendTempMessage(0xFF);
+                                    sendTempMessage(itemValue1);
+                                } else {
+                                    sendTempMessage(0xFF);
+                                    sendTempMessage(1);
+                                }
+                                sendTempMessage(0xBB);
+                                sendTempMessage(0x01);
+
+                                sendTempMessage(0xFF);
+                                sendTempMessage(1);
+                                break;
+
+                            case "升温":
+                                getFreqData();
+                                if (itemValue1 < 10 && itemValue1 > 0) {
+                                    sendTempMessage(5);
+                                    sendTempMessage(itemValue1);
+                                }
+
+                                sendTempMessage(1);
+                                sendTempMessage(itemValue2);
+                                break;
+
+                            case "数据":
+                                try {
+                                    Thread.sleep(itemValue1 * 1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                getFreqData();
+
+                                /*int temp = 0;
+                                if (!Objects.equals(columnTempSet.getText().toString(), "")) {
+                                    temp = Integer.parseInt(columnTempSet.getText().toString());
+                                }
+                                if (temp < 200 && temp >= 0) {
+                                    sendTempMessage(1);
+                                    sendTempMessage(temp);
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "毛细管温度设置不合法!", Toast.LENGTH_SHORT).show();
+                                }*/
+                                sendTempMessage(1);
+                                sendTempMessage(30);
+                                break;
+
+                            case "清洁":
+                                sendFreqMessage(1);
+                                sendFreqMessage(itemValue2);
+
+                                sendFreqMessage(0x06);
+                                sendFreqMessage(0);
+                                sendFreqMessage ( 0x07 );
+                                sendFreqMessage ( 0 );
+
+                                try {
+                                    Thread.sleep(itemValue1 * 1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                sendFreqMessage(1);
+                                sendFreqMessage(30);
+                                sendFreqMessage(0x05);
+                                sendFreqMessage(0);
+                                sendFreqMessage ( 0x08 );
+                                sendFreqMessage ( 0 );
+                                break;
+                            case "风扇":
+                                break;
+
+                            default:
+                                break;
+                        }
+
+
+                    }
+
+                }
+
+
+
+            }
+        }).start();
+    }
+
+
+
+
+
     //Button 开始计频的onclick函数;
     @SuppressLint("SimpleDateFormat")
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void startFrequency(View view) {
 
         if (socketFreq.isConnected ()) {
-            if (mStartFrequency.getText ().toString ().equals ( "开始检测" )) {
+            if (mAutoMode.isChecked()){
+            	if (socketTemp.isConnected ())
+				{
+					SharedPreferences WorkflowTag = getSharedPreferences("Workflow",MODE_PRIVATE);
+					autoTag = WorkflowTag.getInt("Tag",0);
+					if (autoTag>0)
+					{
+                        autoRun();
+					}else {
+						Toast.makeText ( getApplicationContext (), "请预先设置自动流程!", Toast.LENGTH_SHORT ).show ();
+					}
+				}else {
+					Toast.makeText ( getApplicationContext (), "温控蓝牙未连接!", Toast.LENGTH_SHORT ).show ();
+				}
 
 
-                //
-                StartFrequencyTag = true;
-
-                sendFreqMessage ( 0xAA );
-                sendFreqMessage ( 0xAA );
-                mStartFrequency.setText ( "停止检测" );
-                freqBeginTime = System.currentTimeMillis ();
-
-
-
-
-                mFreqChart.removeAllViews ();
-                mFreqService.mSeries.clear ();
-                mFreqService.mSeries.clearSeriesValues ();
-                mFreqService.setXYMultipleSeriesDataset ( " " );
-                mFreqService.setXYMultipleSeriesRenderer ( 10, 10, " ", "时间", "频率",
-                        Color.RED, Color.RED, Color.RED, Color.BLACK );
-                FreqChartView = mFreqService.getGraphicalView ();
-                mFreqChart.addView ( FreqChartView, new LinearLayout.LayoutParams
-                        ( LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT ) );
-
-                mFreqDiffChart.removeAllViews ();
-                mFreqDiffService.mSeries.clear ();
-                mFreqService.mSeries.clearSeriesValues ();
-                mFreqDiffService.setXYMultipleSeriesDataset ( " " );
-                mFreqDiffService.setXYMultipleSeriesRenderer ( 10, 10, " ", "时间", "频率差分",
-                        Color.RED, Color.RED, Color.RED, Color.BLACK );
-                FreqDiffChartView = mFreqDiffService.getGraphicalView ();
-                mFreqDiffChart.addView ( FreqDiffChartView, new LinearLayout.LayoutParams
-                        ( LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT ) );
-
-                if (mSaveData.isChecked ())
-                {
-                    try {
-
-                        SimpleDateFormat sDateFormat;
-                        sDateFormat = new SimpleDateFormat ("yyyy-MM-dd    hh:mm:ss");
-                        String DateTitle = sDateFormat.format(new java.util.Date());
-
-                        File path = new File ( Environment.getExternalStorageDirectory () + "/Android"+"/data"+"/com.zju.sawdetector"+File.separator);
-                        if (!path.exists ())
-                        {
-                            path.mkdirs();
-                        }
-                        File file = new File(path,DateTitle+".txt");
-                       // Log.d ( "saveToSDCard", String.valueOf ( file ) );
-                       // Log.d ( "saveToSDCard", String.valueOf ( file.exists () ) );
-                        if (!file.exists ())
-                        {
-                            try {
-                                Boolean Tag = file.createNewFile();
-                                Log.d ( "saveToSDCard", String.valueOf ( Tag ) );
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        FreqSave =  new FileOutputStream(file);
-                        FreqSaveWriter = new BufferedWriter ( new OutputStreamWriter ( FreqSave ) );
-
-
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace ();
-                    }
-                }
-
-            } else if (mStartFrequency.getText ().toString ().equals ( "停止检测" )) {
-
-
-                sendFreqMessage ( 0xAB );
-                sendFreqMessage ( 0xAB );
-                mStartFrequency.setText ( "开始检测" );
-                StartFrequencyTag = false;
-                mFreqService.multipleSeriesRenderer.setRange ( new double[]{0, freqTime, mFreqService.mSeries.getMinY (), mFreqService.mSeries.getMaxY ()} );
-                mFreqService.mGraphicalView.repaint ();
-
-                mFreqDiffService.multipleSeriesRenderer.setRange ( new double[]{0, freqTime, 0, mFreqDiffService.mSeries.getMaxY ()} );
-                mFreqDiffService.mGraphicalView.repaint ();
-
-                if (mSaveData.isChecked ()) {
-                    try {
-                        FreqSaveWriter.close ();
-                        FreqSave.close ();
-                    } catch (IOException e) {
-                        e.printStackTrace ();
-                    }
-                }
-
-
+            }else {
+                getFreqData();
             }
-        } else {
-            Toast.makeText ( getApplicationContext (), "计频蓝牙未连接!", Toast.LENGTH_LONG ).show ();
-        }
 
+        } else {
+            Toast.makeText ( getApplicationContext (), "计频蓝牙未连接!", Toast.LENGTH_SHORT ).show ();
+        }
 
     }
 
@@ -754,7 +893,7 @@ public class MainSystem extends AppCompatActivity {
             if (!Objects.equals ( volumeSet.getText ().toString (), "" )) {
                 temp = Integer.parseInt ( volumeSet.getText ().toString () );
 
-                temp = temp * 200;
+                temp = temp * 40;
                 int v2 = temp % 256;
                 int v1 = temp / 256;
 
@@ -762,7 +901,7 @@ public class MainSystem extends AppCompatActivity {
                 sendTempMessage ( v1 );
                 sendTempMessage ( v2 );
             } else {
-                Toast.makeText ( getApplicationContext (), "请输入毛细管目标温度", Toast.LENGTH_SHORT ).show ();
+                Toast.makeText ( getApplicationContext (), "请输入目标流量值", Toast.LENGTH_SHORT ).show ();
             }
 
 
@@ -788,6 +927,89 @@ public class MainSystem extends AppCompatActivity {
 
 
     }
+
+
+    //计频操作
+    public  void getFreqData ( ){
+        if (!StartFrequencyTag) {
+            //
+            StartFrequencyTag = true;
+
+            sendFreqMessage ( 0xAA );
+            sendFreqMessage ( 0xAA );
+
+            freqBeginTime = System.currentTimeMillis ();
+
+            Message message = new Message ();
+            message.what = clearPaint;
+            handler.sendMessage ( message );
+
+            if (mSaveData.isChecked ())
+            {
+                try {
+
+                    SimpleDateFormat sDateFormat;
+                    sDateFormat = new SimpleDateFormat ("yyyy-MM-dd    hh:mm:ss");
+                    String DateTitle = sDateFormat.format(new java.util.Date());
+
+                    File path = new File ( Environment.getExternalStorageDirectory () + "/Android"+"/data"+"/com.zju.sawdetector"+File.separator);
+                    if (!path.exists ())
+                    {
+                        path.mkdirs();
+                    }
+                    File file = new File(path,DateTitle+".txt");
+
+                    if (!file.exists ())
+                    {
+                        try {
+                            Boolean Tag = file.createNewFile();
+                            Log.d ( "saveToSDCard", String.valueOf ( Tag ) );
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    FreqSave =  new FileOutputStream(file);
+                    FreqSaveWriter = new BufferedWriter ( new OutputStreamWriter ( FreqSave ) );
+
+
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace ();
+                }
+            }
+
+        } else{
+
+
+
+            sendFreqMessage ( 0xAB );
+            sendFreqMessage ( 0xAB );
+
+
+            Message message = new Message ();
+            message.what = updatePaint;
+            handler.sendMessage ( message );
+
+
+            //mStartFrequency.setText ( "开始检测" );
+            StartFrequencyTag = false;
+
+
+
+            if (mSaveData.isChecked ()) {
+                try {
+                    FreqSaveWriter.close ();
+                    FreqSave.close ();
+                } catch (IOException e) {
+                    e.printStackTrace ();
+                }
+            }
+
+
+        }
+    }
+
+
 
     //Switch 温控片工作模式的onclick函数;
     public void sawTempMode(View view) {
@@ -819,6 +1041,9 @@ public class MainSystem extends AppCompatActivity {
         Intent intent = new Intent ( MainSystem.this, WorkflowSetting.class );
         startActivity ( intent );
     }
+
+
+
 
 
     public void sendFreqMessage(int msg) {

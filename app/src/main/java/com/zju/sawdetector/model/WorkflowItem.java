@@ -12,8 +12,8 @@ public class WorkflowItem {
 		INJECT,
 		SAMPLE,
 		WAIT("s"),
-		FLASH("°C"),
-		HEAT("s", "°C"),
+		FLASH(" "),
+		HEAT("°C/s", "°C"),
 		DATA("s"),
 		BAKE("s", "°C"),
 		FAN;

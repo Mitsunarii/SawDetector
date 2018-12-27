@@ -2,7 +2,6 @@
 <resources>
 
     <string name="app_name">SawDetector</string>
-    <string name="action_settings">Settings</string>
     <string name="turn_on">开启蓝牙</string>
     <string name="show_paired_devices">已配对设备</string>
     <string name="start_discovery">扫描设备</string>
@@ -10,19 +9,14 @@
     <string name="enter_the_system">进入系统</string>
     <string name="welcome_to_the_saw_detector_system">欢迎使用快速气相色谱分析系统</string>
 
-    <string name="title_activity_main_system">MainSystem</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
-    <string name="sawTemperature">传感器:</string>
+    <string name="sawTemperature">传感器(℃):</string>
     <string name="sawFrequency">传感器频率曲线</string>
     <string name="startFrequency">开始检测</string>
-    <string name="stopFrequency">停止检测</string>
-    <string name="SystemTemps">系统温度</string>
-    <string name="InletTemp">进口:</string>
-    <string name="ValveTemp">阀体:</string>
-    <string name="OutletTemp">喷口:</string>
-    <string name="ColumnTemp">毛细管:</string>
-    <string name="Volume">流量:</string>
+    <string name="InletTemp">进口(℃):</string>
+    <string name="ValveTemp">阀体(℃):</string>
+    <string name="OutletTemp">喷口(℃):</string>
+    <string name="ColumnTemp">毛细管(℃):</string>
+    <string name="Volume">流量(ml/min):</string>
     <string name="DataSave">是否保存数据</string>
     <string name="AutoMode">自动模式</string>
     <string name="TempParameterSetting">目标参数设置</string>
@@ -33,7 +27,6 @@
     <string name="TempGoal">目标值</string>
     <string name="sawTempWork">温控片工作</string>
     <string name="sawTempMode">工作模式</string>
-    <string name="sawDetector">快速气相色谱检测系统</string>
     <string name="WorkflowSetting">流程设置</string>
 
 
